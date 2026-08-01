@@ -407,6 +407,9 @@ All panels use the same physical colour scale. Each title reports MSE over the
 complete aligned `64³` volume, not over the displayed slab. The truth panel
 labels the silver, lead, and uranium \(1/X_0\) values.
 
+Use `--full-depth` to replace the centered slab with a mean projection over all
+64 z layers. The output remains a 64×64 x–y grid.
+
 ## Run all methods on Geant4 ROOT
 
 ```bash

@@ -1,7 +1,7 @@
 import numpy as np
 
 from muon_tomo.geometry import GridGeometry
-from muon_tomo.plotting import _z_slab
+from muon_tomo.plotting import _z_projection, _z_slab
 
 
 def test_z_slab_is_a_64_by_64_layer_average():
@@ -23,3 +23,15 @@ def test_z_slab_requires_odd_in_bounds_layer_count():
             pass
         else:
             raise AssertionError("invalid layer count was accepted")
+
+
+def test_full_depth_projection_averages_all_64_layers():
+    volume = np.zeros((64, 64, 64), dtype=float)
+    for z in range(64):
+        volume[:, :, z] = z
+    projection, first, last = _z_projection(
+        volume, center_index=3, slab_layers=5, full_depth=True
+    )
+    assert projection.shape == (64, 64)
+    assert (first, last) == (0, 63)
+    np.testing.assert_allclose(projection, 31.5)

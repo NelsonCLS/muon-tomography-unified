@@ -331,6 +331,7 @@ def command_plot(args: argparse.Namespace) -> None:
         output=args.output,
         center_index=args.center_index,
         slab_layers=args.slab_layers,
+        full_depth=args.full_depth,
     )
     if args.metrics_output:
         _write_json(report, args.metrics_output)
@@ -453,6 +454,11 @@ def build_parser() -> argparse.ArgumentParser:
     plot.add_argument("--calibration")
     plot.add_argument("--center-index", type=int, default=32)
     plot.add_argument("--slab-layers", type=int, default=7)
+    plot.add_argument(
+        "--full-depth",
+        action="store_true",
+        help="average all 64 z layers instead of a centered slab",
+    )
     plot.add_argument("--output", required=True)
     plot.add_argument("--metrics-output")
     plot.set_defaults(func=command_plot)

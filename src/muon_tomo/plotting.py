@@ -24,6 +24,17 @@ def _z_slab(
     return np.mean(volume[:, :, first:last], axis=2), first, last - 1
 
 
+def _z_projection(
+    volume: np.ndarray,
+    center_index: int,
+    slab_layers: int,
+    full_depth: bool,
+) -> tuple[np.ndarray, int, int]:
+    if full_depth:
+        return np.mean(volume, axis=2), 0, volume.shape[2] - 1
+    return _z_slab(volume, center_index, slab_layers)
+
+
 def plot_comparison_slab(
     truth: TruthVolume,
     results: list[ReconstructionResult],
@@ -31,6 +42,7 @@ def plot_comparison_slab(
     output: str | Path,
     center_index: int = 32,
     slab_layers: int = 7,
+    full_depth: bool = False,
 ) -> dict[str, object]:
     """Write a 2x2 truth/MuNet/PoCA/likelihood z-slab comparison."""
     try:
@@ -46,8 +58,11 @@ def plot_comparison_slab(
         if result.geometry != truth.geometry:
             raise ValueError(f"{result.method} geometry differs from truth")
 
-    truth_slab, first, last = _z_slab(
-        truth.inverse_radiation_length_cm_inv, center_index, slab_layers
+    truth_slab, first, last = _z_projection(
+        truth.inverse_radiation_length_cm_inv,
+        center_index,
+        slab_layers,
+        full_depth,
     )
     panels = [("Truth", truth_slab, 0.0)]
     metrics: dict[str, object] = {}
@@ -57,15 +72,21 @@ def plot_comparison_slab(
         ("likelihood", "Likelihood"),
     ):
         result = by_method[method]
-        slab, _, _ = _z_slab(
-            result.inverse_radiation_length_cm_inv, center_index, slab_layers
+        slab, _, _ = _z_projection(
+            result.inverse_radiation_length_cm_inv,
+            center_index,
+            slab_layers,
+            full_depth,
         )
         row = compare_to_truth(result, truth)
         metrics[method] = row
         panels.append((label, slab, float(row["mse_full_grid_cm_inv_squared"])))
 
     fig, axes = plt.subplots(2, 2, figsize=(12.5, 10.5), constrained_layout=True)
-    vmax = float(np.max(truth.inverse_radiation_length_cm_inv))
+    # Use the displayed truth projection to define one common scale. Full-depth
+    # averaging dilutes materials by their z occupancy, so the unprojected
+    # material maximum would make every physically correct panel too dark.
+    vmax = float(np.max(truth_slab))
     images = []
     for axis, (label, slab, mse) in zip(axes.flat, panels):
         image = axis.imshow(
@@ -106,10 +127,13 @@ def plot_comparison_slab(
         if mean_p is not None
         else "Momentum policy not recorded"
     )
+    depth_text = (
+        f"full-depth mean over z=0–{last} ({last + 1} layers)"
+        if full_depth
+        else f"mean z slab {first}–{last} ({slab_layers} layers)"
+    )
     fig.suptitle(
-        f"Funny record comparison — mean z slab {first}–{last} ({slab_layers} layers)\n"
-        f"{policy_text}",
-        fontsize=13,
+        f"Funny record comparison — {depth_text}\n{policy_text}", fontsize=13
     )
     fig.colorbar(
         images[0],
@@ -123,10 +147,11 @@ def plot_comparison_slab(
     plt.close(fig)
     return {
         "output": str(target.resolve()),
-        "center_z_index": center_index,
+        "center_z_index": None if full_depth else center_index,
         "slab_first_z_index": first,
         "slab_last_z_index": last,
-        "slab_layers": slab_layers,
+        "slab_layers": last - first + 1,
+        "projection": "full-depth z mean" if full_depth else "z-slab mean",
         "mse_scope": "full aligned 64^3 grid",
         "classical_momentum_policy": by_method["poca"].metadata.get(
             "momentum_policy"
