@@ -38,6 +38,7 @@ The following workflows have been exercised successfully on the local samples:
 | PoCA/likelihood ignore every per-muon momentum magnitude | passed |
 | PoCA/likelihood use the same fixed 1743.46 MeV inverse-square effective prior | passed |
 | Reproducible 2×2 truth/MuNet/PoCA/likelihood slab plot | passed |
+| Rotatable truth/MuNet/PoCA/likelihood 3D voxel-cube viewer | passed |
 | Unit and synthetic reconstruction tests | passed |
 
 The committed code does not train or fine-tune Mu-Net. The copied weights are
@@ -447,6 +448,38 @@ For example, append one of the following pairs to the plot command:
 --full-depth --projection-axis x  # y-z view
 --full-depth --projection-axis y  # x-z view
 ```
+
+## Interactive 3D voxel-cube viewer
+
+`plot3d` writes one self-contained HTML viewer containing Truth, MuNet, PoCA,
+and Likelihood on the canonical 64³/±50 cm region. Use the dropdown to switch
+volumes, drag to rotate, scroll to zoom, and hover over a cube to read its
+position and calibrated inverse radiation length.
+
+```bash
+muon-tomo plot3d \
+  --truth outputs/funny/record_0_truth.npz \
+  outputs/funny/record_0_munet.npz \
+  outputs/funny/record_0_poca.npz \
+  outputs/funny/record_0_likelihood.npz \
+  --calibration configs/funny-v4-robust-mlsd.calibration.json \
+  --threshold-cm-inv 0.1 \
+  --opacity 0.45 \
+  --max-cubes 12000 \
+  --output outputs/figures/funny_record0_3d_voxels.html \
+  --metrics-output outputs/funny/record_0_3d_metrics.json
+```
+
+Each displayed voxel is a physical 1.5625 cm cube positioned from the shared
+`GridGeometry`. All four volumes use the same 0-to-truth-maximum colour scale,
+and the gray wireframe marks the complete reconstruction boundary. Medium
+opacity is configurable with `--opacity`.
+
+To keep rotation responsive, the default draws thresholded six-neighbor
+surface cubes and deterministically caps each volume at `--max-cubes`.
+`--include-interior` draws interior cubes too, but can produce a much larger
+HTML file and substantially higher browser memory use. The JSON report records
+eligible and displayed cube counts so subsampling is never hidden.
 
 ## Run all methods on Geant4 ROOT
 

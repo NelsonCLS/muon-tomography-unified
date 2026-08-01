@@ -16,6 +16,7 @@ from .compare import compare_to_truth
 from .geometry import GridGeometry
 from .io import inspect_tfrecord, load_root_tracks, load_tfrecord_record
 from .plotting import plot_comparison_slab
+from .plotting3d import plot_comparison_3d
 from .reconstruction import LikelihoodReconstructor, MuNetReconstructor, PoCAReconstructor
 from .types import ReconstructionResult, TruthVolume
 
@@ -349,6 +350,26 @@ def command_plot(args: argparse.Namespace) -> None:
     print(args.output)
 
 
+def command_plot3d(args: argparse.Namespace) -> None:
+    truth = _load_truth(args.truth)
+    results = [ReconstructionResult.load(path) for path in args.results]
+    if args.calibration:
+        models = load_calibrations(args.calibration)
+        results = [apply_calibration(result, models[result.method]) for result in results]
+    report = plot_comparison_3d(
+        truth,
+        results,
+        output=args.output,
+        threshold_cm_inv=args.threshold_cm_inv,
+        max_cubes=args.max_cubes,
+        opacity=args.opacity,
+        surface_only=not args.include_interior,
+    )
+    if args.metrics_output:
+        _write_json(report, args.metrics_output)
+    print(args.output)
+
+
 def command_validate(args: argparse.Namespace) -> None:
     results = [ReconstructionResult.load(path) for path in args.results]
     methods = {x.method for x in results}
@@ -480,6 +501,40 @@ def build_parser() -> argparse.ArgumentParser:
     plot.add_argument("--output", required=True)
     plot.add_argument("--metrics-output")
     plot.set_defaults(func=command_plot)
+
+    plot3d = sub.add_parser(
+        "plot3d",
+        help="write a rotatable truth/MuNet/PoCA/likelihood voxel-cube viewer",
+    )
+    plot3d.add_argument("--truth", required=True)
+    plot3d.add_argument("results", nargs=3)
+    plot3d.add_argument("--calibration")
+    plot3d.add_argument(
+        "--threshold-cm-inv",
+        type=float,
+        default=0.1,
+        help="display voxels at or above this 1/X0 threshold",
+    )
+    plot3d.add_argument(
+        "--max-cubes",
+        type=int,
+        default=12000,
+        help="maximum displayed cubes per volume",
+    )
+    plot3d.add_argument(
+        "--opacity",
+        type=float,
+        default=0.45,
+        help="voxel face opacity in (0,1]",
+    )
+    plot3d.add_argument(
+        "--include-interior",
+        action="store_true",
+        help="include interior thresholded voxels; surface cubes are the default",
+    )
+    plot3d.add_argument("--output", required=True)
+    plot3d.add_argument("--metrics-output")
+    plot3d.set_defaults(func=command_plot3d)
 
     validate = sub.add_parser("validate", help="validate an aligned three-method result set")
     validate.add_argument("results", nargs="+")
