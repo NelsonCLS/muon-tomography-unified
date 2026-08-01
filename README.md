@@ -416,8 +416,11 @@ muon-tomo compare \
   --output outputs/funny/record_0_metrics.json
 ```
 
-Metrics are computed only over each method's valid mask and include MAE, RMSE,
-bias, coverage, and value ranges in cm⁻¹.
+Every comparison reports MSE over the complete aligned `64³` grid, with
+uncovered PoCA and likelihood voxels retained as zero predictions. It also
+reports coverage-conditioned MAE, RMSE, bias, coverage, and value ranges in
+cm⁻¹. Cross-section figures always annotate the full-volume `64³` MSE, never a
+slice-only MSE.
 
 ## Tests
 

@@ -72,6 +72,8 @@
           {
             "record": 1,
             "method": "munet",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.10299128895326046,
             "valid_voxels": 262144,
             "coverage_fraction": 1.0,
             "mae_cm_inv": 0.12953815876166175,
@@ -125,6 +127,8 @@
           {
             "record": 1,
             "method": "poca",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.9515485928550991,
             "valid_voxels": 4892,
             "coverage_fraction": 0.0186614990234375,
             "mae_cm_inv": 0.8077188876342525,
@@ -178,6 +182,8 @@
           {
             "record": 1,
             "method": "likelihood",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.32911299717455095,
             "valid_voxels": 226212,
             "coverage_fraction": 0.8629302978515625,
             "mae_cm_inv": 0.20430076180790704,
