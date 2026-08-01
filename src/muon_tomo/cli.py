@@ -524,8 +524,8 @@ def build_parser() -> argparse.ArgumentParser:
     plot3d.add_argument(
         "--opacity",
         type=float,
-        default=0.45,
-        help="voxel face opacity in (0,1]",
+        default=0.6,
+        help="maximum voxel opacity; lower-density cubes are more transparent",
     )
     plot3d.add_argument(
         "--include-interior",

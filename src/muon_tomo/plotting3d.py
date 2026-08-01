@@ -85,6 +85,28 @@ def _select_voxels(
     return indices, selected_values, candidate_count
 
 
+def _density_opacity_groups(
+    values: np.ndarray,
+    maximum_value: float,
+    maximum_opacity: float,
+    bins: int = 6,
+) -> list[tuple[np.ndarray, float]]:
+    """Group cubes into monotonic density-opacity bands for Plotly meshes."""
+    values = np.asarray(values, dtype=np.float64)
+    if maximum_value <= 0.0 or bins < 1:
+        raise ValueError("maximum_value and bins must be positive")
+    normalized = np.clip(values / maximum_value, 0.0, 1.0)
+    bin_ids = np.minimum((normalized * bins).astype(np.int64), bins - 1)
+    groups = []
+    for bin_id in np.unique(bin_ids):
+        selected = bin_ids == bin_id
+        group_opacity = max(
+            float(maximum_opacity * np.mean(normalized[selected])), 1.0e-4
+        )
+        groups.append((selected, group_opacity))
+    return groups
+
+
 def _voxel_cube_mesh(
     indices: np.ndarray,
     values: np.ndarray,
@@ -152,7 +174,7 @@ def plot_comparison_3d(
     output: str | Path,
     threshold_cm_inv: float = 0.1,
     max_cubes: int = 12000,
-    opacity: float = 0.45,
+    opacity: float = 0.6,
     surface_only: bool = True,
 ) -> dict[str, object]:
     """Write a rotatable HTML viewer with selectable aligned voxel-cube volumes."""
@@ -211,6 +233,7 @@ def plot_comparison_3d(
     )
     report_panels: dict[str, object] = {}
     button_labels: list[str] = []
+    panel_trace_indices: list[list[int]] = []
     for panel_index, (label, volume, metrics, discrete) in enumerate(panels):
         indices, values, candidates = _select_voxels(
             volume,
@@ -220,54 +243,75 @@ def plot_comparison_3d(
             separate_regions=discrete,
             seed=panel_index,
         )
-        mesh = _voxel_cube_mesh(
-            indices, values, geometry.lower_cm, geometry.voxel_size_cm
-        )
         mse = 0.0 if metrics is None else float(
             metrics["mse_full_grid_cm_inv_squared"]
         )
         button_label = f"{label} ({len(indices):,} cubes)"
         button_labels.append(button_label)
-        figure.add_trace(
-            go.Mesh3d(
-                **mesh,
-                name=label,
-                visible=panel_index == 0,
-                opacity=opacity,
-                colorscale="Magma",
-                cmin=0.0,
-                cmax=vmax,
-                flatshading=True,
-                showscale=True,
-                colorbar={
-                    "title": "1/X0 [cm^-1]",
-                    "len": 0.72,
-                    "thickness": 18,
-                },
-                lighting={
-                    "ambient": 0.72,
-                    "diffuse": 0.55,
-                    "specular": 0.08,
-                    "roughness": 0.9,
-                    "fresnel": 0.05,
-                },
-                lightposition={"x": 150, "y": 120, "z": 180},
-                hovertemplate=(
-                    f"{label}<br>x=%{{x:.2f}} cm<br>y=%{{y:.2f}} cm"
-                    "<br>z=%{z:.2f} cm<br>1/X0=%{intensity:.3f} cm^-1"
-                    "<extra></extra>"
-                ),
+        trace_indices = []
+        opacity_values = []
+        for group_index, (selected, group_opacity) in enumerate(
+            _density_opacity_groups(values, vmax, opacity)
+        ):
+            mesh = _voxel_cube_mesh(
+                indices[selected],
+                values[selected],
+                geometry.lower_cm,
+                geometry.voxel_size_cm,
             )
-        )
+            figure.add_trace(
+                go.Mesh3d(
+                    **mesh,
+                    name=label,
+                    visible=panel_index == 0,
+                    opacity=group_opacity,
+                    colorscale="Magma",
+                    cmin=0.0,
+                    cmax=vmax,
+                    flatshading=True,
+                    showscale=group_index == 0,
+                    colorbar={
+                        "title": "1/X0 [cm^-1]",
+                        "len": 0.72,
+                        "thickness": 18,
+                    },
+                    lighting={
+                        "ambient": 0.72,
+                        "diffuse": 0.55,
+                        "specular": 0.08,
+                        "roughness": 0.9,
+                        "fresnel": 0.05,
+                    },
+                    lightposition={"x": 150, "y": 120, "z": 180},
+                    hovertemplate=(
+                        f"{label}<br>x=%{{x:.2f}} cm<br>y=%{{y:.2f}} cm"
+                        "<br>z=%{z:.2f} cm<br>1/X0=%{intensity:.3f} cm^-1"
+                        "<extra></extra>"
+                    ),
+                    showlegend=False,
+                )
+            )
+            trace_indices.append(len(figure.data) - 1)
+            opacity_values.append(group_opacity)
+        panel_trace_indices.append(trace_indices)
         report_panels[label.lower()] = {
             "eligible_cubes": candidates,
             "displayed_cubes": int(len(indices)),
             "mse_full_grid_cm_inv_squared": mse,
+            "minimum_display_opacity": (
+                float(min(opacity_values)) if opacity_values else 0.0
+            ),
+            "maximum_display_opacity": (
+                float(max(opacity_values)) if opacity_values else 0.0
+            ),
         }
 
     buttons = []
     for selected, label in enumerate(button_labels):
-        visible = [True] + [index == selected for index in range(len(panels))]
+        visible = [False] * len(figure.data)
+        visible[0] = True
+        for trace_index in panel_trace_indices[selected]:
+            visible[trace_index] = True
         panel_name = panels[selected][0]
         mse = report_panels[panel_name.lower()]["mse_full_grid_cm_inv_squared"]
         buttons.append(
@@ -281,7 +325,8 @@ def plot_comparison_3d(
                             "text": (
                                 f"{panel_name} - rotatable 64^3 voxel view"
                                 f"<br><sup>full-grid MSE = {mse:.4g} cm^-2; "
-                                f"threshold = {threshold_cm_inv:.3g} cm^-1</sup>"
+                                f"threshold = {threshold_cm_inv:.3g} cm^-1; "
+                                f"max opacity = {opacity:.0%}</sup>"
                             )
                         }
                     },
@@ -301,7 +346,8 @@ def plot_comparison_3d(
             "text": (
                 "Truth - rotatable 64^3 voxel view"
                 f"<br><sup>full-grid MSE = 0 cm^-2; "
-                f"threshold = {threshold_cm_inv:.3g} cm^-1</sup>"
+                f"threshold = {threshold_cm_inv:.3g} cm^-1; "
+                f"max opacity = {opacity:.0%}</sup>"
             ),
             "x": 0.5,
         },
@@ -349,7 +395,8 @@ def plot_comparison_3d(
         "geometry": geometry.metadata(),
         "threshold_cm_inv": threshold_cm_inv,
         "max_cubes_per_volume": max_cubes,
-        "opacity": opacity,
+        "maximum_opacity": opacity,
+        "opacity_mapping": "six monotonic density bands",
         "surface_only": surface_only,
         "color_scale_cm_inv": [0.0, vmax],
         "panels": report_panels,

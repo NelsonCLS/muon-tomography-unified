@@ -1,6 +1,11 @@
 import numpy as np
 
-from muon_tomo.plotting3d import _select_voxels, _surface_mask, _voxel_cube_mesh
+from muon_tomo.plotting3d import (
+    _density_opacity_groups,
+    _select_voxels,
+    _surface_mask,
+    _voxel_cube_mesh,
+)
 
 
 def test_single_voxel_builds_a_physical_cube():
@@ -45,3 +50,14 @@ def test_voxel_selection_is_thresholded_bounded_and_deterministic():
     np.testing.assert_array_equal(first, repeated)
     np.testing.assert_array_equal(values, repeated_values)
     np.testing.assert_allclose(values, 0.5)
+
+
+def test_density_opacity_is_monotonic_and_capped_at_sixty_percent():
+    values = np.asarray([0.1, 0.5, 1.5, 3.1583333])
+
+    groups = _density_opacity_groups(values, 3.1583333, 0.6)
+    opacities = [opacity for _, opacity in groups]
+
+    assert np.all(np.diff(opacities) > 0.0)
+    assert opacities[-1] == 0.6
+    assert opacities[0] < opacities[-1]

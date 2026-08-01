@@ -464,7 +464,7 @@ muon-tomo plot3d \
   outputs/funny/record_0_likelihood.npz \
   --calibration configs/funny-v4-robust-mlsd.calibration.json \
   --threshold-cm-inv 0.1 \
-  --opacity 0.45 \
+  --opacity 0.60 \
   --max-cubes 12000 \
   --output outputs/figures/funny_record0_3d_voxels.html \
   --metrics-output outputs/funny/record_0_3d_metrics.json
@@ -472,8 +472,9 @@ muon-tomo plot3d \
 
 Each displayed voxel is a physical 1.5625 cm cube positioned from the shared
 `GridGeometry`. All four volumes use the same 0-to-truth-maximum colour scale,
-and the gray wireframe marks the complete reconstruction boundary. Medium
-opacity is configurable with `--opacity`.
+and the gray wireframe marks the complete reconstruction boundary. Opacity
+increases monotonically with density and is capped by `--opacity`; the default
+maximum is 0.60.
 
 To keep rotation responsive, the default draws thresholded six-neighbor
 surface cubes and deterministically caps each volume at `--max-cubes`.
