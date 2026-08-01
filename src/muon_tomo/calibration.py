@@ -22,6 +22,12 @@ class CalibrationModel:
     calibration_id: str = "funny-v1"
     target: str = "inverse_radiation_length_cm_inv"
 
+    def __post_init__(self) -> None:
+        if not np.isfinite(self.slope) or not np.isfinite(self.intercept):
+            raise ValueError("calibration coefficients must be finite")
+        if self.slope < 0.0:
+            raise ValueError("physical calibration slope must be nonnegative")
+
     def apply(self, raw: np.ndarray) -> np.ndarray:
         return np.clip(self.slope * np.asarray(raw) + self.intercept, 0.0, None)
 
@@ -82,6 +88,15 @@ def fit_calibration(
     else:
         slope = float(np.dot(w * x, w * y) / max(np.dot(w * x, w * x), 1e-20))
         intercept = 0.0
+    # Angular MLEM already reports its native estimator in cm^-1. Sparse or
+    # weakly sampled material medians can make an unconstrained affine fit
+    # negative, which would invert material and air. Preserve the native unit
+    # instead of accepting an unphysical response reversal.
+    if slope < 0.0:
+        if method == "likelihood":
+            slope, intercept = 1.0, 0.0
+        else:
+            raise ValueError(f"{method} calibration produced an unphysical negative slope")
     return CalibrationModel(method, float(slope), float(intercept), calibration_id), rows
 
 

@@ -16,8 +16,8 @@
     },
     {
       "method": "likelihood",
-      "slope": -6076668141.920868,
-      "intercept": 2.697533193805326,
+      "slope": 1.0,
+      "intercept": 0.0,
       "calibration_id": "funny-v1",
       "target": "inverse_radiation_length_cm_inv"
     }
@@ -138,8 +138,8 @@
         ]
       },
       "likelihood": {
-        "slope": -6076668141.920868,
-        "intercept": 2.697533193805326,
+        "slope": 1.0,
+        "intercept": 0.0,
         "fit_regions": [
           {
             "label": 0,
@@ -180,11 +180,11 @@
             "method": "likelihood",
             "valid_voxels": 226212,
             "coverage_fraction": 0.8629302978515625,
-            "mae_cm_inv": 1.455339061622731,
-            "rmse_cm_inv": 1.9069823069361942,
-            "bias_cm_inv": 1.2078708388704293,
+            "mae_cm_inv": 0.20430076180790704,
+            "rmse_cm_inv": 0.5881524393254818,
+            "bias_cm_inv": -0.1623826936554412,
             "prediction_min_cm_inv": 0.0,
-            "prediction_max_cm_inv": 2.697533130645752,
+            "prediction_max_cm_inv": 13.907668113708496,
             "truth_min_cm_inv": 0.0,
             "truth_max_cm_inv": 3.1583333015441895
           }

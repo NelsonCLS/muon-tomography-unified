@@ -275,7 +275,9 @@ scattering density is converted to canonical \(1/X_0\).
 The optional `angular` mode is a faster path-integral MLEM using momentum-
 normalized angular observations. It has the same result contract but is a
 different estimator; a calibration must only be applied to the mode that
-created it.
+created it. Its native estimator is already in cm\(^{-1}\). If sparse material
+statistics would give an unphysical negative affine slope, calibration keeps
+the identity map instead of reversing material and air.
 
 ## Run all methods on `funny`
 
@@ -332,7 +334,9 @@ For each method the calibration code:
 2. erodes non-air material masks by the configured two voxels;
 3. intersects masks with the method's `valid_mask`;
 4. measures robust material-region native values;
-5. fits a versioned affine post-processing map;
+5. fits a versioned, nonnegative-slope affine post-processing map (with an
+   identity fallback for likelihood, whose native estimator is already in
+   cm\(^{-1}\));
 6. records fit regions and record-1 metrics in the JSON report.
 
 This is post-processing only. Mu-Net weights are not changed.
