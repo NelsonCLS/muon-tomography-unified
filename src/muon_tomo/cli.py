@@ -206,6 +206,14 @@ def command_reconstruct(args: argparse.Namespace) -> None:
                 mode=args.likelihood_mode,
                 momentum_policy=momentum_policy,
                 average_momentum_mev=average_momentum_mev,
+                update_statistic=(
+                    args.likelihood_update or values.get("update_statistic", "median")
+                ),
+                angular_resolution_rad=float(values["angular_resolution_rad"]),
+                position_resolution_cm=float(values["position_resolution_cm"]),
+                maximum_inverse_radiation_length_cm_inv=float(
+                    values["maximum_inverse_radiation_length_cm_inv"]
+                ),
             )
         result = reconstructor.reconstruct(tracks)
         result.metadata.update(
@@ -305,6 +313,8 @@ def command_calibrate(args: argparse.Namespace) -> None:
         report["methods"][method] = {
             "slope": model.slope,
             "intercept": model.intercept,
+            "fit_statistic": model.fit_statistic,
+            "maximum_cm_inv": model.maximum_cm_inv,
             "fit_regions": rows,
             "validation": validations,
         }
@@ -420,6 +430,7 @@ def build_parser() -> argparse.ArgumentParser:
     recon.add_argument("--max-chunks", type=int)
     recon.add_argument("--iterations", type=int)
     recon.add_argument("--likelihood-mode", choices=("full", "angular"), default="full")
+    recon.add_argument("--likelihood-update", choices=("mean", "median"))
     recon.add_argument(
         "--classical-momentum-policy",
         choices=("mean", "per-track"),
@@ -439,7 +450,7 @@ def build_parser() -> argparse.ArgumentParser:
     calibrate.add_argument("--config")
     calibrate.add_argument("--fit-records", type=int, nargs="+", default=[0])
     calibrate.add_argument("--validate-records", type=int, nargs="+", default=[1])
-    calibrate.add_argument("--calibration-id", default="funny-v3-mean-momentum")
+    calibrate.add_argument("--calibration-id", default="funny-v4-robust-mlsd")
     calibrate.set_defaults(func=command_calibrate)
 
     compare = sub.add_parser("compare", help="compare result files with canonical truth")

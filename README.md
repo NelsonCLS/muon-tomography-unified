@@ -36,12 +36,27 @@ The following workflows have been exercised successfully on the local samples:
 | Same shape, bounds, axes, and voxel size across methods | passed |
 | Fit on funny record 0 and evaluate on funny record 1 | passed |
 | PoCA/likelihood ignore every per-muon momentum magnitude | passed |
-| PoCA/likelihood use the same configured 3 GeV population prior | passed |
+| PoCA/likelihood use the same fixed 1743.46 MeV inverse-square effective prior | passed |
 | Reproducible 2×2 truth/MuNet/PoCA/likelihood slab plot | passed |
 | Unit and synthetic reconstruction tests | passed |
 
 The committed code does not train or fine-tune Mu-Net. The copied weights are
 loaded read-only at inference time.
+
+### Quantitative limitation of the 8,192-track comparison
+
+After the audited full-covariance correction and funny-v4 calibration, record 0
+full-grid MSE is 0.1108 cm^-2 for Mu-Net, 0.2833 cm^-2 for PoCA, and
+0.4201 cm^-2 for likelihood. Held-out record 1 MSE is 0.1035, 0.2893, and
+0.3641 cm^-2, respectively. Likelihood path coverage is about 51%, but most
+covered 64³ voxels still receive too few rays for a continuous image. The
+historical sharp likelihood result used roughly 602,000 tracks and 10 cm
+voxels; it is not evidence that 8,192 tracks can resolve 1.5625 cm voxels.
+
+A normalized Gaussian regularization sweep was rejected because every tested
+strength worsened held-out record-1 likelihood MSE. The default therefore
+preserves the physically corrected but visibly sparse reconstruction instead
+of smoothing record 0 into an unvalidated image.
 
 ## Hard geometry contract
 
@@ -59,8 +74,10 @@ Every method uses exactly the same `GridGeometry` object:
 These bounds are fixed by the frozen Mu-Net transform
 `normalized = position_cm / 100 + 0.5`: normalized coordinates 0 and 1 are
 exactly -50 and +50 cm. The constructor rejects any other shape, bounds, or axis
-order. Detector track reference planes remain at -100 and +100 cm and are
-independent of the target voxel cube. Result validation rejects files that do
+order. Detector track reference planes remain at -100 and +100 cm. Classical
+tracks are extrapolated to the reconstruction faces at z=+50 and z=-50 cm
+before displacement or path calculations, so the observations and covariance
+weights use the same 100 cm baseline. Result validation rejects files that do
 not share identical geometry or the exact same selected-track fingerprint.
 
 ## Repository layout
@@ -227,12 +244,14 @@ When expressed in mrad²/cm:
 =25\,\rho_X[\mathrm{cm}^{-1}],
 \]
 
-so \(\rho_X=\lambda_{\mathrm{ref}}/25\). The classical default is a fixed
-population-average prior \(\bar p=3000\) MeV. PoCA and likelihood assign this
-same scalar to every selected event; neither method reads an event's simulated
-momentum magnitude. The prior is configured independently of each record, so
-record-level Geant4 truth cannot leak into reconstruction. Constants and the
-information policy are recorded in configuration and result metadata.
+so \(\rho_X=\lambda_{\mathrm{ref}}/25\). The classical default assigns
+every event the same fixed effective momentum
+\(p_{\mathrm{eff}}=1743.4602\) MeV. This is the inverse-square population
+prior \(p_{\mathrm{ref}}/\sqrt{E[(p_{\mathrm{ref}}/p)^2]}\) determined once
+from funny record 0; it is not an arithmetic event-momentum average. PoCA and
+likelihood never read an individual event's simulated momentum magnitude.
+The prior is then held fixed for calibration and validation records. Constants
+and the information policy are recorded in configuration and result metadata.
 
 ## Reconstruction methods
 
@@ -285,18 +304,29 @@ L^2/2+LT & L^3/3+L^2T+LT^2
 \end{bmatrix}.
 \]
 
-Track covariance is assembled sparsely over crossed voxels and updated using
-both projected angular and displacement observations. Internal reference
-scattering density is converted to canonical \(1/X_0\). Every event covariance
-uses the same configured \(\bar p\), not its hidden Geant4 momentum.
+The implementation establishes physical upper-to-lower track order, intersects
+both fitted lines with the z=+50 and z=-50 cm grid faces, and forms projected
+angle and displacement observations over that same volume baseline. When PoCA
+lies inside the volume, covariance weights follow the entry-to-PoCA-to-exit
+kinked path; otherwise they follow the face-to-face chord. This avoids the
+audited detector-plane/grid-baseline mismatch that inflated displacement
+density.
 
-The optional `angular` mode is a faster path-integral MLEM using momentum-
-normalized angular observations. It has the same result contract but is a
-different estimator; a calibration must only be applied to the mode that
-created it. Its native estimator is already in cm\(^{-1}\), so likelihood uses
-an identity calibration rather than an unstable material-median affine fit.
-Zero-occupancy voxels use the same single-pass six-face-neighbor fill as PoCA;
-the coverage mask is retained separately.
+Track covariance is assembled sparsely over crossed voxels and updated using
+both projected angular and displacement observations. The default is ten
+iterations with the robust voxel-wise median MLSD update. On the 8,192-track
+funny comparison, 50 iterations overfit sparse rays; ten is therefore the
+validated default, not merely a speed setting. Internal reference scattering
+density is converted to canonical \(1/X_0\), and every covariance uses the
+same fixed effective momentum rather than hidden per-event momentum.
+
+The optional `angular` mode remains available as a diagnostic path-integral
+estimator, but it is not the validated comparison default and must have its own
+calibration. Full likelihood is calibrated from eroded, covered material-region
+means because its sparse voxel distribution is strongly skewed; Mu-Net and
+PoCA retain material medians. Calibration is bounded to the truth range present
+in the calibration sample. Zero-occupancy voxels use the same single-pass
+six-face-neighbor fill as PoCA; the coverage mask is retained separately.
 
 ## Run all methods on `funny`
 
@@ -313,9 +343,9 @@ muon-tomo reconstruct "$FUNNY" \
   --seed 0 \
   --max-chunks 8 \
   --iterations 10 \
-  --likelihood-mode angular \
+  --likelihood-mode full \
   --classical-momentum-policy mean \
-  --average-momentum-mev 3000 \
+  --average-momentum-mev 1743.4601815051958 \
   --output-dir outputs/funny
 
 muon-tomo reconstruct "$FUNNY" \
@@ -325,9 +355,9 @@ muon-tomo reconstruct "$FUNNY" \
   --seed 0 \
   --max-chunks 8 \
   --iterations 10 \
-  --likelihood-mode angular \
+  --likelihood-mode full \
   --classical-momentum-policy mean \
-  --average-momentum-mev 3000 \
+  --average-momentum-mev 1743.4601815051958 \
   --output-dir outputs/funny
 ```
 
@@ -337,9 +367,6 @@ methods. A SHA-256 fingerprint over event IDs, positions, directions, and
 momenta is stored in every result and must match during validation. Omit
 `--limit` and `--max-chunks` to use the largest common complete-chunk selection.
 
-For full covariance likelihood, replace `angular` with `full`. Refit calibration
-for that mode.
-
 `mean` means a fixed population prior, not the arithmetic mean of hidden
 momenta in the selected simulation record. `per-track` remains available only
 to reproduce earlier studies and is rejected by the aligned-comparison
@@ -347,7 +374,7 @@ validator.
 
 ## Calibrate with `funny`
 
-The current `funny-v3-mean-momentum` protocol fits record 0 and evaluates
+The current `funny-v4-robust-mlsd` protocol fits record 0 and evaluates
 record 1 under the fixed-average policy:
 
 ```bash
@@ -356,8 +383,8 @@ muon-tomo calibrate \
   --results-dir outputs/funny \
   --fit-records 0 \
   --validate-records 1 \
-  --calibration-id funny-v3-mean-momentum \
-  --output configs/funny-v3-mean-momentum.calibration.json
+  --calibration-id funny-v4-robust-mlsd \
+  --output configs/funny-v4-robust-mlsd.calibration.json
 ```
 
 For each method the calibration code:
@@ -365,11 +392,11 @@ For each method the calibration code:
 1. maps material labels to \(1/X_0\);
 2. erodes non-air material masks by the configured two voxels;
 3. intersects masks with the method's `valid_mask`;
-4. measures robust material-region native values;
-5. fits a versioned, nonnegative-slope affine post-processing map for Mu-Net
-   and PoCA, while retaining identity calibration for likelihood because its
-   native estimator is already in cm\(^{-1}\);
-6. records fit regions and record-1 metrics in the JSON report.
+4. measures material medians for Mu-Net/PoCA and covered-region means for
+   sparse full-covariance likelihood;
+5. fits a versioned, nonnegative-slope affine map into \(1/X_0\), bounded to
+   the truth range represented by the calibration sample;
+6. records the fit statistic, regions, settings, and record-1 metrics.
 
 This is post-processing only. Mu-Net weights are not changed.
 
@@ -379,10 +406,10 @@ Apply a calibration during reconstruction:
 muon-tomo reconstruct "$FUNNY" \
   --record-index 1 \
   --method all \
-  --likelihood-mode angular \
+  --likelihood-mode full \
   --classical-momentum-policy mean \
-  --average-momentum-mev 3000 \
-  --calibration configs/funny-v3-mean-momentum.calibration.json \
+  --average-momentum-mev 1743.4601815051958 \
+  --calibration configs/funny-v4-robust-mlsd.calibration.json \
   --output-dir outputs/funny_calibrated
 ```
 
@@ -396,10 +423,10 @@ muon-tomo plot \
   outputs/funny/record_0_munet.npz \
   outputs/funny/record_0_poca.npz \
   outputs/funny/record_0_likelihood.npz \
-  --calibration configs/funny-v3-mean-momentum.calibration.json \
+  --calibration configs/funny-v4-robust-mlsd.calibration.json \
   --center-index 32 \
   --slab-layers 7 \
-  --output outputs/figures/funny_record0_mean_momentum.png \
+  --output outputs/figures/funny_record0_robust_mlsd_slab7.png \
   --metrics-output outputs/funny/record_0_plot_metrics.json
 ```
 
@@ -421,12 +448,13 @@ muon-tomo reconstruct "$ROOT_SAMPLE" \
   --iterations 2 \
   --likelihood-mode full \
   --classical-momentum-policy mean \
-  --average-momentum-mev 3000 \
+  --average-momentum-mev 1743.4601815051958 \
   --output-dir outputs/root_smoke
 ```
 
-For a production run, omit the track/chunk limits and increase likelihood
-iterations according to convergence. A ROOT input has no embedded voxel truth;
+For a higher-statistics run, omit the track/chunk limits. Keep the validated
+ten likelihood iterations unless a separate convergence study justifies a
+change. A ROOT input has no embedded voxel truth;
 comparison requires a separately exported truth volume using the identical
 geometry.
 
@@ -510,8 +538,9 @@ pytest -q tests/test_root_integration.py
 Tests cover the fixed `64³`/±50 cm contract, Mu-Net normalization equivalence,
 positive xyz orientation without swaps or reflections, physical landmark
 mapping, exact selected-track fingerprints, segment-length accounting, unit
-conversions, material truth, result round-trips, both likelihood modes, PoCA
-count separation, TFRecord parsing, and ROOT detector-plane ordering.
+conversions, material truth, result round-trips, both likelihood modes, physical track ordering, grid-face extrapolation,
+PoCA-kinked MLSD paths, PoCA count separation, TFRecord parsing, and ROOT
+detector-plane ordering.
 
 ## Configuration
 
@@ -522,7 +551,7 @@ count separation, TFRecord parsing, and ROOT detector-plane ordering.
 - fixed population-average momentum and classical information policy;
 - frozen Mu-Net dosage and feature normalization;
 - PoCA coverage threshold;
-- likelihood initialization, iteration count, and numerical epsilon;
+- likelihood initialization, robust update, iteration count, detector resolution, and numerical bounds;
 - calibration mask erosion and intercept policy.
 
 Pass an alternative read-only configuration with `--config PATH`. Any geometry

@@ -20,17 +20,28 @@ class CalibrationModel:
     method: str
     slope: float
     intercept: float
-    calibration_id: str = "funny-v3-mean-momentum"
+    calibration_id: str = "funny-v4-robust-mlsd"
     target: str = "inverse_radiation_length_cm_inv"
+    fit_statistic: str = "raw_median"
+    maximum_cm_inv: float | None = None
 
     def __post_init__(self) -> None:
         if not np.isfinite(self.slope) or not np.isfinite(self.intercept):
             raise ValueError("calibration coefficients must be finite")
         if self.slope < 0.0:
             raise ValueError("physical calibration slope must be nonnegative")
+        if self.fit_statistic not in {"raw_median", "raw_mean"}:
+            raise ValueError("fit_statistic must be raw_median or raw_mean")
+        if self.maximum_cm_inv is not None and (
+            not np.isfinite(self.maximum_cm_inv) or self.maximum_cm_inv <= 0.0
+        ):
+            raise ValueError("maximum_cm_inv must be finite and positive")
 
     def apply(self, raw: np.ndarray) -> np.ndarray:
-        return np.clip(self.slope * np.asarray(raw) + self.intercept, 0.0, None)
+        calibrated = np.clip(self.slope * np.asarray(raw) + self.intercept, 0.0, None)
+        if self.maximum_cm_inv is not None:
+            calibrated = np.minimum(calibrated, self.maximum_cm_inv)
+        return calibrated
 
 
 def material_statistics(
@@ -71,7 +82,7 @@ def fit_calibration(
     *,
     erosion_voxels: int = 2,
     fit_intercept: bool = True,
-    calibration_id: str = "funny-v3-mean-momentum",
+    calibration_id: str = "funny-v4-robust-mlsd",
 ) -> tuple[CalibrationModel, list[dict[str, float | int | str]]]:
     rows: list[dict[str, float | int | str]] = []
     for result, truth in pairs:
@@ -80,7 +91,8 @@ def fit_calibration(
         rows.extend(material_statistics(result, truth, erosion_voxels=erosion_voxels))
     if len(rows) < 2:
         raise ValueError("at least two covered material regions are needed for calibration")
-    x = np.asarray([float(row["raw_median"]) for row in rows])
+    fit_statistic = "raw_mean" if method == "likelihood" else "raw_median"
+    x = np.asarray([float(row[fit_statistic]) for row in rows])
     y = np.asarray([float(row["truth_cm_inv"]) for row in rows])
     w = np.sqrt(np.asarray([int(row["voxels"]) for row in rows], dtype=float))
     if fit_intercept:
@@ -89,14 +101,16 @@ def fit_calibration(
     else:
         slope = float(np.dot(w * x, w * y) / max(np.dot(w * x, w * x), 1e-20))
         intercept = 0.0
-    # Likelihood already reports its native estimator in cm^-1. Material-median
-    # affine fits are unstable under sparse coverage and can either invert or
-    # greatly amplify the field, so retain the physical native scale.
-    if method == "likelihood":
-        slope, intercept = 1.0, 0.0
-    elif slope < 0.0:
+    if slope < 0.0:
         raise ValueError(f"{method} calibration produced an unphysical negative slope")
-    return CalibrationModel(method, float(slope), float(intercept), calibration_id), rows
+    return CalibrationModel(
+        method,
+        float(slope),
+        float(intercept),
+        calibration_id,
+        fit_statistic=fit_statistic,
+        maximum_cm_inv=float(np.max(y)),
+    ), rows
 
 
 def apply_calibration(result: ReconstructionResult, model: CalibrationModel) -> ReconstructionResult:

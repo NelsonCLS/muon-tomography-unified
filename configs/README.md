@@ -1,19 +1,21 @@
 # Configuration assets
 
-- `default.yaml` defines the shared mandatory 64³ geometry and method defaults.
-- `funny-v3-mean-momentum.calibration.json` is the current calibration for the
-  fixed 3000 MeV population-average policy. PoCA and likelihood use that same
-  scalar for every event and never use per-muon momentum magnitudes. It fits
-  funny record 0 and records held-out record-1 metrics.
-- `funny-v2-spatial.calibration.json` is the retained calibration generated
-  from the 8,192-track-per-record angular-likelihood workflow documented in the
-  main README. It fits funny record 0 on the corrected canonical ±50 cm target
-  cube and contains validation metrics for record 1.
-  The likelihood entry uses the native cm^-1 identity map; likelihood affine
-  fits are intentionally disabled because sparse material medians can invert or
-  strongly amplify an already physical estimator.
+- `default.yaml` defines the mandatory shared 64³ geometry and validated method
+  defaults. Classical reconstruction assigns every event the same fixed
+  1743.4601815051958 MeV inverse-square effective momentum prior and never uses
+  per-muon momentum magnitudes. Full-covariance likelihood uses physical
+  upper-to-lower ordering, grid-face observations, PoCA-kinked paths, ten
+  iterations, and the robust median update.
+- `funny-v4-robust-mlsd.calibration.json` is generated from funny record 0 and
+  includes held-out record-1 metrics. Likelihood fits covered-region means;
+  Mu-Net and PoCA fit eroded material medians. All maps target cm^-1 and are
+  bounded to the material truth range represented by funny.
+- `funny-v3-mean-momentum.calibration.json` and
+  `funny-v2-spatial.calibration.json` are historical angular-likelihood
+  calibrations retained for provenance. They are not compatible with the
+  corrected full-covariance estimator.
 
-Calibration files are estimator- and momentum-policy-specific. Do not apply an
-angular-likelihood calibration to a full-covariance result, or a per-track
-calibration to a fixed-average result; refit with the same mode and settings
-used for reconstruction.
+Calibration files are estimator-, geometry-, update-, iteration-, and
+momentum-policy-specific. Never apply an angular-likelihood calibration to a
+full-covariance result, or a per-track calibration to a fixed-prior result.
+Refit whenever any of those settings changes.

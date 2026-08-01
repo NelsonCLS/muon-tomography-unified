@@ -29,7 +29,7 @@ def test_negative_physical_calibration_is_rejected():
         CalibrationModel("likelihood", slope=-1.0, intercept=1.0)
 
 
-def test_likelihood_inverted_fit_falls_back_to_native_cm_inverse():
+def test_likelihood_inverted_fit_is_rejected():
     geometry = GridGeometry()
     labels = np.zeros((64, 64, 64), dtype=np.int32)
     labels[:32] = 17
@@ -41,13 +41,11 @@ def test_likelihood_inverted_fit_falls_back_to_native_cm_inverse():
     )
     truth = TruthVolume(labels, truth_values, geometry)
 
-    model, _ = fit_calibration("likelihood", [(result, truth)], erosion_voxels=0)
-
-    assert model.slope == 1.0
-    assert model.intercept == 0.0
+    with pytest.raises(ValueError, match="negative slope"):
+        fit_calibration("likelihood", [(result, truth)], erosion_voxels=0)
 
 
-def test_likelihood_positive_affine_fit_also_keeps_native_cm_inverse():
+def test_likelihood_positive_affine_fit_is_applied():
     geometry = GridGeometry()
     labels = np.zeros((64, 64, 64), dtype=np.int32)
     labels[:32] = 17
@@ -61,8 +59,11 @@ def test_likelihood_positive_affine_fit_also_keeps_native_cm_inverse():
 
     model, _ = fit_calibration("likelihood", [(result, truth)], erosion_voxels=0)
 
-    assert model.slope == 1.0
-    assert model.intercept == 0.0
+    assert np.isclose(model.slope, 4.0)
+    assert np.isclose(model.intercept, -0.4)
+    assert model.fit_statistic == "raw_mean"
+    assert model.maximum_cm_inv == 2.0
+    assert model.apply(np.asarray([100.0]))[0] == 2.0
 
 
 @pytest.mark.parametrize("method", ["poca", "likelihood"])
