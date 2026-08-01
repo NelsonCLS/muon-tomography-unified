@@ -1,0 +1,14 @@
+Muon Tomography Unified
+
+This repository contains new integration and calibration code and adapted code
+from Muon-Tomography-AI, Copyright 2023 Lim Li Xin Jed & Qiu Ziming, licensed
+under Apache License 2.0.
+
+The PoCA and likelihood implementations are derived from the local muonTruck
+research code at source revision 8393853a47e8654552a62d1886fb6766d637782f,
+with local uncommitted changes present at import time. No license file was found
+in that source repository. Redistribution outside the owner's environment
+therefore requires the owner to confirm the applicable license.
+
+All copied or adapted files are changed to integrate the methods behind a
+shared data model, fixed 64^3 geometry, explicit units, and one output schema.

@@ -1,0 +1,29 @@
+geometry:
+  shape: [64, 64, 64]
+  lower_cm: [-100.0, -100.0, -100.0]
+  upper_cm: [100.0, 100.0, 100.0]
+  axis_order: xyz
+
+physics:
+  highland_constant_mev: 15.0
+  reference_momentum_mev: 3000.0
+
+munet:
+  dosage: 1024
+  weights: model_1024.weights.h5
+  position_scale_cm: 100.0
+  position_offset: 0.5
+
+poca:
+  minimum_coverage: 1
+
+likelihood:
+  iterations: 10
+  initial_inverse_radiation_length_cm_inv: 0.001
+  minimum_coverage: 1
+  epsilon: 1.0e-9
+
+calibration:
+  erosion_voxels: 2
+  include_background: true
+  fit_intercept: true

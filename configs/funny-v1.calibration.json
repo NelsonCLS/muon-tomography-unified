@@ -1,0 +1,195 @@
+{
+  "models": [
+    {
+      "method": "munet",
+      "slope": 0.45702050786053905,
+      "intercept": -0.01889660889177593,
+      "calibration_id": "funny-v1",
+      "target": "inverse_radiation_length_cm_inv"
+    },
+    {
+      "method": "poca",
+      "slope": 0.29811870151954534,
+      "intercept": 0.05430405381397359,
+      "calibration_id": "funny-v1",
+      "target": "inverse_radiation_length_cm_inv"
+    },
+    {
+      "method": "likelihood",
+      "slope": -6076668141.920868,
+      "intercept": 2.697533193805326,
+      "calibration_id": "funny-v1",
+      "target": "inverse_radiation_length_cm_inv"
+    }
+  ],
+  "report": {
+    "dataset": "/Users/nelsonchan/Muon_Tomo/Muon-Tomography-AI/dataset/voxels_prediction_funny.tfrecord",
+    "fit_records": [
+      0
+    ],
+    "validate_records": [
+      1
+    ],
+    "methods": {
+      "munet": {
+        "slope": 0.45702050786053905,
+        "intercept": -0.01889660889177593,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 226384,
+            "truth_cm_inv": 0.0,
+            "raw_median": 0.04151957109570503,
+            "raw_mean": 0.2526450753211975
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 17604,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 2.892937660217285,
+            "raw_mean": 2.770145893096924
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 888,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 2.8882131576538086,
+            "raw_mean": 2.7654242515563965
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 1032,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 2.867617607116699,
+            "raw_mean": 2.7933874130249023
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "munet",
+            "valid_voxels": 262144,
+            "coverage_fraction": 1.0,
+            "mae_cm_inv": 0.12953815876166175,
+            "rmse_cm_inv": 0.32092255912176143,
+            "bias_cm_inv": -0.009234375454738597,
+            "prediction_min_cm_inv": 0.0,
+            "prediction_max_cm_inv": 1.338381290435791,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      },
+      "poca": {
+        "slope": 0.29811870151954534,
+        "intercept": 0.05430405381397359,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 2916,
+            "truth_cm_inv": 0.0,
+            "raw_median": 0.001154051162302494,
+            "raw_mean": 0.028852585703134537
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 1366,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 3.744473457336426,
+            "raw_mean": 12.455717086791992
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 33,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 0.0016305680619552732,
+            "raw_mean": 0.24040289223194122
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 33,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 0.0025382686872035265,
+            "raw_mean": 0.002908156020566821
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "poca",
+            "valid_voxels": 4892,
+            "coverage_fraction": 0.0186614990234375,
+            "mae_cm_inv": 0.8077188876342525,
+            "rmse_cm_inv": 5.960915408110599,
+            "bias_cm_inv": 0.4783906797701013,
+            "prediction_min_cm_inv": 0.05430502071976662,
+            "prediction_max_cm_inv": 289.0825500488281,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      },
+      "likelihood": {
+        "slope": -6076668141.920868,
+        "intercept": 2.697533193805326,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 191951,
+            "truth_cm_inv": 0.0,
+            "raw_median": 4.2965728197508213e-10,
+            "raw_mean": 0.036691904067993164
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 16296,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 4.222067140347008e-10,
+            "raw_mean": 0.10490129142999649
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 791,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 3.8416749188800264e-20,
+            "raw_mean": 0.02651013433933258
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 935,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 2.2996764864664965e-20,
+            "raw_mean": 0.00017687639046926051
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "likelihood",
+            "valid_voxels": 226212,
+            "coverage_fraction": 0.8629302978515625,
+            "mae_cm_inv": 1.455339061622731,
+            "rmse_cm_inv": 1.9069823069361942,
+            "bias_cm_inv": 1.2078708388704293,
+            "prediction_min_cm_inv": 0.0,
+            "prediction_max_cm_inv": 2.697533130645752,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      }
+    }
+  }
+}
