@@ -254,7 +254,9 @@ incoming and outgoing lines. It deposits
 
 in the PoCA voxel. Values are averaged over events assigned to that voxel.
 `occupancy_count` is the number of localized events and is never presented as
-the reconstruction itself.
+the reconstruction itself. Voxels with zero occupancy retain a zero PoCA
+prediction, including after affine calibration; `valid_mask` separately records
+whether a voxel met the configured coverage threshold.
 
 ### Likelihood/MLEM
 

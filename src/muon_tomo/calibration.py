@@ -103,9 +103,12 @@ def fit_calibration(
 def apply_calibration(result: ReconstructionResult, model: CalibrationModel) -> ReconstructionResult:
     if result.method != model.method:
         raise ValueError(f"calibration is for {model.method}, result is {result.method}")
+    calibrated = model.apply(result.raw_estimator)
+    if result.method == "poca":
+        calibrated = np.where(result.occupancy_count > 0, calibrated, 0.0)
     return ReconstructionResult(
         result.method,
-        model.apply(result.raw_estimator),
+        calibrated,
         result.raw_estimator,
         result.occupancy_count,
         result.valid_mask,

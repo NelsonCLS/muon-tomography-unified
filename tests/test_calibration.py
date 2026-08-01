@@ -45,3 +45,20 @@ def test_likelihood_inverted_fit_falls_back_to_native_cm_inverse():
 
     assert model.slope == 1.0
     assert model.intercept == 0.0
+
+
+def test_poca_calibration_preserves_zero_for_empty_voxels():
+    geometry = GridGeometry()
+    raw = np.zeros((64, 64, 64), dtype=np.float32)
+    counts = np.zeros_like(raw, dtype=np.int64)
+    raw[1, 2, 3] = 2.0
+    counts[1, 2, 3] = 1
+    result = ReconstructionResult(
+        "poca", raw, raw, counts, counts > 0, geometry
+    )
+    model = CalibrationModel("poca", slope=2.0, intercept=0.5)
+
+    calibrated = apply_calibration(result, model)
+
+    assert calibrated.inverse_radiation_length_cm_inv[0, 0, 0] == 0.0
+    assert calibrated.inverse_radiation_length_cm_inv[1, 2, 3] == 4.5
