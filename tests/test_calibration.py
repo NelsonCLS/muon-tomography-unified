@@ -63,3 +63,4 @@ def test_sparse_calibration_preserves_zero_for_invalid_voxels(method):
 
     assert calibrated.inverse_radiation_length_cm_inv[0, 0, 0] == 0.0
     assert calibrated.inverse_radiation_length_cm_inv[1, 2, 3] == 4.5
+    assert calibrated.inverse_radiation_length_cm_inv[2, 2, 3] == 0.75

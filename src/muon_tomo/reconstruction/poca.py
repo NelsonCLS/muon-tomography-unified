@@ -6,6 +6,7 @@ import numpy as np
 
 from ..constants import HIGHLAND_CONSTANT_MEV
 from ..geometry import GridGeometry
+from ..postprocess import fill_empty_with_six_neighbor_mean
 from ..types import ReconstructionResult, TrackTable
 from .common import closest_approach
 
@@ -60,9 +61,10 @@ class PoCAReconstructor:
         raw = raw.reshape(geometry.shape)
         count_volume = counts.reshape(geometry.shape)
         valid = count_volume >= self.minimum_coverage
+        prediction = fill_empty_with_six_neighbor_mean(raw, count_volume == 0)
         return ReconstructionResult(
             method="poca",
-            inverse_radiation_length_cm_inv=np.clip(raw, 0.0, None),
+            inverse_radiation_length_cm_inv=np.clip(prediction, 0.0, None),
             raw_estimator=raw,
             occupancy_count=count_volume,
             valid_mask=valid,
@@ -75,5 +77,6 @@ class PoCAReconstructor:
                 "tracks_input": len(tracks),
                 "tracks_with_valid_poca": accepted,
                 "occupancy_definition": "events localized to the PoCA voxel",
+                "empty_voxel_fill": "single-pass mean of in-bounds 6-face neighbors",
             },
         )

@@ -6,6 +6,7 @@ import numpy as np
 
 from ..constants import HIGHLAND_CONSTANT_MEV, REFERENCE_MOMENTUM_MEV
 from ..geometry import GridGeometry
+from ..postprocess import fill_empty_with_six_neighbor_mean
 from ..types import ReconstructionResult, TrackTable
 from .common import prepare_paths
 
@@ -141,9 +142,10 @@ class LikelihoodReconstructor:
         volume = rho.reshape(self.geometry.shape)
         valid = occupancy >= self.minimum_coverage
         volume = np.where(valid, volume, 0.0)
+        prediction = fill_empty_with_six_neighbor_mean(volume, occupancy == 0)
         return ReconstructionResult(
             method="likelihood",
-            inverse_radiation_length_cm_inv=np.clip(volume, 0.0, None),
+            inverse_radiation_length_cm_inv=np.clip(prediction, 0.0, None),
             raw_estimator=volume,
             occupancy_count=occupancy,
             valid_mask=valid,
@@ -159,5 +161,6 @@ class LikelihoodReconstructor:
                 "tracks_input": len(tracks),
                 "tracks_with_grid_path": int(sum(bool(len(x)) for x in paths)),
                 "occupancy_definition": "number of reconstructed chords crossing each voxel",
+                "empty_voxel_fill": "single-pass mean of in-bounds 6-face neighbors",
             },
         )

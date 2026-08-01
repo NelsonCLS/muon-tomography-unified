@@ -254,9 +254,11 @@ incoming and outgoing lines. It deposits
 
 in the PoCA voxel. Values are averaged over events assigned to that voxel.
 `occupancy_count` is the number of localized events and is never presented as
-the reconstruction itself. Voxels with zero occupancy retain a zero PoCA
-prediction, including after affine calibration; `valid_mask` separately records
-whether a voxel met the configured coverage threshold.
+the reconstruction itself. In the primary prediction, each zero-occupancy
+voxel is filled by one synchronous mean of its in-bounds six face-connected
+neighbors, both before and after calibration. Measured voxels are unchanged,
+while `valid_mask` separately records whether a voxel met the configured
+coverage threshold.
 
 ### Likelihood/MLEM
 
@@ -279,7 +281,9 @@ normalized angular observations. It has the same result contract but is a
 different estimator; a calibration must only be applied to the mode that
 created it. Its native estimator is already in cm\(^{-1}\). If sparse material
 statistics would give an unphysical negative affine slope, calibration keeps
-the identity map instead of reversing material and air.
+the identity map instead of reversing material and air. Zero-occupancy voxels
+use the same single-pass six-face-neighbor fill as PoCA; the coverage mask is
+retained separately.
 
 ## Run all methods on `funny`
 
@@ -416,8 +420,8 @@ muon-tomo compare \
   --output outputs/funny/record_0_metrics.json
 ```
 
-Every comparison reports MSE over the complete aligned `64³` grid, with
-uncovered PoCA and likelihood voxels retained as zero predictions. It also
+Every comparison reports MSE over the complete aligned `64³` grid, after the
+six-face-neighbor fill for zero-occupancy PoCA and likelihood voxels. It also
 reports coverage-conditioned MAE, RMSE, bias, coverage, and value ranges in
 cm⁻¹. Cross-section figures always annotate the full-volume `64³` MSE, never a
 slice-only MSE.
