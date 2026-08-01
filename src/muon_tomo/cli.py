@@ -342,6 +342,7 @@ def command_plot(args: argparse.Namespace) -> None:
         center_index=args.center_index,
         slab_layers=args.slab_layers,
         full_depth=args.full_depth,
+        projection_axis=args.projection_axis,
     )
     if args.metrics_output:
         _write_json(report, args.metrics_output)
@@ -468,7 +469,13 @@ def build_parser() -> argparse.ArgumentParser:
     plot.add_argument(
         "--full-depth",
         action="store_true",
-        help="average all 64 z layers instead of a centered slab",
+        help="average all 64 layers along the selected projection axis",
+    )
+    plot.add_argument(
+        "--projection-axis",
+        choices=("x", "y", "z"),
+        default="z",
+        help="axis to average through; the other two axes form the 64x64 plot",
     )
     plot.add_argument("--output", required=True)
     plot.add_argument("--metrics-output")

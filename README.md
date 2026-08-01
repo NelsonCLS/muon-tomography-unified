@@ -434,8 +434,19 @@ All panels use the same physical colour scale. Each title reports MSE over the
 complete aligned `64³` volume, not over the displayed slab. The truth panel
 labels the silver, lead, and uranium \(1/X_0\) values.
 
-Use `--full-depth` to replace the centered slab with a mean projection over all
-64 z layers. The output remains a 64×64 x–y grid.
+Use `--full-depth` to average all 64 layers along the selected projection
+axis. `--projection-axis z` produces the x–y grid, `--projection-axis x`
+produces the y–z grid, and `--projection-axis y` produces the x–z grid. Every
+output remains 64×64, uses the same physical bounds and colour scale within
+its four panels, and reports MSE over the original full 64³ volume.
+
+For example, append one of the following pairs to the plot command:
+
+```text
+--full-depth --projection-axis z  # x-y view
+--full-depth --projection-axis x  # y-z view
+--full-depth --projection-axis y  # x-z view
+```
 
 ## Run all methods on Geant4 ROOT
 

@@ -24,15 +24,43 @@ def _z_slab(
     return np.mean(volume[:, :, first:last], axis=2), first, last - 1
 
 
+AXIS_INDEX = {"x": 0, "y": 1, "z": 2}
+
+
+def _axis_projection(
+    volume: np.ndarray,
+    center_index: int,
+    slab_layers: int,
+    full_depth: bool,
+    projection_axis: str = "z",
+) -> tuple[np.ndarray, int, int]:
+    if projection_axis not in AXIS_INDEX:
+        raise ValueError("projection_axis must be x, y, or z")
+    axis = AXIS_INDEX[projection_axis]
+    if full_depth:
+        return np.mean(volume, axis=axis), 0, volume.shape[axis] - 1
+    if projection_axis == "z":
+        return _z_slab(volume, center_index, slab_layers)
+    if slab_layers < 1 or slab_layers % 2 != 1:
+        raise ValueError("slab_layers must be a positive odd number")
+    half = slab_layers // 2
+    first = center_index - half
+    last = center_index + half + 1
+    if first < 0 or last > volume.shape[axis]:
+        raise ValueError(f"requested {projection_axis} slab falls outside the volume")
+    selection = [slice(None)] * volume.ndim
+    selection[axis] = slice(first, last)
+    return np.mean(volume[tuple(selection)], axis=axis), first, last - 1
+
+
 def _z_projection(
     volume: np.ndarray,
     center_index: int,
     slab_layers: int,
     full_depth: bool,
 ) -> tuple[np.ndarray, int, int]:
-    if full_depth:
-        return np.mean(volume, axis=2), 0, volume.shape[2] - 1
-    return _z_slab(volume, center_index, slab_layers)
+    """Backward-compatible z projection helper."""
+    return _axis_projection(volume, center_index, slab_layers, full_depth, "z")
 
 
 def plot_comparison_slab(
@@ -43,8 +71,9 @@ def plot_comparison_slab(
     center_index: int = 32,
     slab_layers: int = 7,
     full_depth: bool = False,
+    projection_axis: str = "z",
 ) -> dict[str, object]:
-    """Write a 2x2 truth/MuNet/PoCA/likelihood z-slab comparison."""
+    """Write a 2x2 truth/MuNet/PoCA/likelihood projection comparison."""
     try:
         import matplotlib.pyplot as plt
     except ImportError as exc:
@@ -58,11 +87,12 @@ def plot_comparison_slab(
         if result.geometry != truth.geometry:
             raise ValueError(f"{result.method} geometry differs from truth")
 
-    truth_slab, first, last = _z_projection(
+    truth_slab, first, last = _axis_projection(
         truth.inverse_radiation_length_cm_inv,
         center_index,
         slab_layers,
         full_depth,
+        projection_axis,
     )
     panels = [("Truth", truth_slab, 0.0)]
     metrics: dict[str, object] = {}
@@ -72,11 +102,12 @@ def plot_comparison_slab(
         ("likelihood", "Likelihood"),
     ):
         result = by_method[method]
-        slab, _, _ = _z_projection(
+        slab, _, _ = _axis_projection(
             result.inverse_radiation_length_cm_inv,
             center_index,
             slab_layers,
             full_depth,
+            projection_axis,
         )
         row = compare_to_truth(result, truth)
         metrics[method] = row
@@ -84,9 +115,12 @@ def plot_comparison_slab(
 
     fig, axes = plt.subplots(2, 2, figsize=(12.5, 10.5), constrained_layout=True)
     # Use the displayed truth projection to define one common scale. Full-depth
-    # averaging dilutes materials by their z occupancy, so the unprojected
+    # averaging dilutes materials by their occupancy along the projection axis,
+    # so the unprojected
     # material maximum would make every physically correct panel too dark.
     vmax = float(np.max(truth_slab))
+    plane_axes = [name for name in ("x", "y", "z") if name != projection_axis]
+    horizontal, vertical = plane_axes
     images = []
     for axis, (label, slab, mse) in zip(axes.flat, panels):
         image = axis.imshow(
@@ -100,8 +134,8 @@ def plot_comparison_slab(
         )
         images.append(image)
         axis.set_title(f"{label}\nfull 64³ MSE = {mse:.4g} cm⁻²")
-        axis.set_xlabel("x [cm] (64 voxels)")
-        axis.set_ylabel("y [cm] (64 voxels)")
+        axis.set_xlabel(f"{horizontal} [cm] (64 voxels)")
+        axis.set_ylabel(f"{vertical} [cm] (64 voxels)")
         axis.set_aspect("equal")
 
     labels = sorted(int(x) for x in np.unique(truth.material_labels) if int(x) != 0)
@@ -128,9 +162,12 @@ def plot_comparison_slab(
         else "Momentum policy not recorded"
     )
     depth_text = (
-        f"full-depth mean over z=0–{last} ({last + 1} layers)"
+        f"full-depth mean over {projection_axis}=0–{last} ({last + 1} layers)"
         if full_depth
-        else f"mean z slab {first}–{last} ({slab_layers} layers)"
+        else (
+            f"mean {projection_axis} slab {first}–{last} "
+            f"({slab_layers} layers)"
+        )
     )
     fig.suptitle(
         f"Funny record comparison — {depth_text}\n{policy_text}", fontsize=13
@@ -147,11 +184,16 @@ def plot_comparison_slab(
     plt.close(fig)
     return {
         "output": str(target.resolve()),
-        "center_z_index": None if full_depth else center_index,
-        "slab_first_z_index": first,
-        "slab_last_z_index": last,
+        "projection_axis": projection_axis,
+        "center_axis_index": None if full_depth else center_index,
+        "slab_first_axis_index": first,
+        "slab_last_axis_index": last,
         "slab_layers": last - first + 1,
-        "projection": "full-depth z mean" if full_depth else "z-slab mean",
+        "projection": (
+            f"full-depth {projection_axis} mean"
+            if full_depth
+            else f"{projection_axis}-slab mean"
+        ),
         "mse_scope": "full aligned 64^3 grid",
         "classical_momentum_policy": by_method["poca"].metadata.get(
             "momentum_policy"
