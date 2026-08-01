@@ -15,6 +15,7 @@ from .calibration import apply_calibration, fit_calibration, load_calibrations, 
 from .compare import compare_to_truth
 from .geometry import GridGeometry
 from .io import inspect_tfrecord, load_root_tracks, load_tfrecord_record
+from .plotting import plot_comparison_slab
 from .reconstruction import LikelihoodReconstructor, MuNetReconstructor, PoCAReconstructor
 from .types import ReconstructionResult, TruthVolume
 
@@ -161,6 +162,15 @@ def command_reconstruct(args: argparse.Namespace) -> None:
         tracks = tracks.take_first(chunks * dosage)
     track_fingerprint = _track_fingerprint(tracks)
     calibration = load_calibrations(args.calibration) if args.calibration else {}
+    momentum_policy = (
+        args.classical_momentum_policy
+        or cfg["physics"].get("classical_momentum_policy", "mean")
+    )
+    average_momentum_mev = (
+        args.average_momentum_mev
+        if args.average_momentum_mev is not None
+        else float(cfg["physics"].get("average_momentum_mev", 3000.0))
+    )
     created = []
     for method in methods:
         if method == "munet":
@@ -178,6 +188,8 @@ def command_reconstruct(args: argparse.Namespace) -> None:
                 geometry,
                 highland_constant_mev=float(cfg["physics"]["highland_constant_mev"]),
                 minimum_coverage=int(cfg["poca"]["minimum_coverage"]),
+                momentum_policy=momentum_policy,
+                average_momentum_mev=average_momentum_mev,
             )
         else:
             values = cfg["likelihood"]
@@ -192,6 +204,8 @@ def command_reconstruct(args: argparse.Namespace) -> None:
                 minimum_coverage=int(values["minimum_coverage"]),
                 epsilon=float(values["epsilon"]),
                 mode=args.likelihood_mode,
+                momentum_policy=momentum_policy,
+                average_momentum_mev=average_momentum_mev,
             )
         result = reconstructor.reconstruct(tracks)
         result.metadata.update(
@@ -215,6 +229,8 @@ def command_reconstruct(args: argparse.Namespace) -> None:
             "geometry": geometry.metadata(),
             "tracks": len(tracks),
             "track_fingerprint_sha256": track_fingerprint,
+            "classical_momentum_policy": momentum_policy,
+            "average_momentum_mev": average_momentum_mev,
         },
         str(output / f"{stem}_manifest.json"),
     )
@@ -230,19 +246,46 @@ def command_calibrate(args: argparse.Namespace) -> None:
         _, truths[record] = load_tfrecord_record(
             args.dataset, record, geometry=geometry, limit=0
         )
+    loaded = {
+        (record, method): ReconstructionResult.load(
+            Path(args.results_dir) / f"record_{record}_{method}.npz"
+        )
+        for record in all_records
+        for method in ("munet", "poca", "likelihood")
+    }
+    policies = {
+        loaded[(record, method)].metadata.get("momentum_policy")
+        for record in all_records
+        for method in ("poca", "likelihood")
+    }
+    assumed_momenta = {
+        loaded[(record, method)].metadata.get("assumed_momentum_mev")
+        for record in all_records
+        for method in ("poca", "likelihood")
+    }
+    if policies != {"mean"} or None in assumed_momenta or len(assumed_momenta) != 1:
+        raise ValueError(
+            "calibration inputs must share one fixed mean-momentum policy and value"
+        )
+    likelihood_modes = {
+        loaded[(record, "likelihood")].metadata.get("mode") for record in all_records
+    }
+    if len(likelihood_modes) != 1:
+        raise ValueError("calibration inputs mix likelihood estimator modes")
     models = []
     report: dict[str, object] = {
         "dataset": str(Path(args.dataset).resolve()),
         "fit_records": fit_records,
         "validate_records": args.validate_records,
+        "classical_momentum_policy": "mean",
+        "assumed_momentum_mev": float(assumed_momenta.pop()),
+        "likelihood_mode": likelihood_modes.pop(),
         "methods": {},
     }
     for method in ("munet", "poca", "likelihood"):
         pairs = []
         for record in fit_records:
-            result = ReconstructionResult.load(
-                Path(args.results_dir) / f"record_{record}_{method}.npz"
-            )
+            result = loaded[(record, method)]
             pairs.append((result, truths[record]))
         model, rows = fit_calibration(
             method,
@@ -254,9 +297,7 @@ def command_calibrate(args: argparse.Namespace) -> None:
         models.append(model)
         validations = []
         for record in args.validate_records:
-            original = ReconstructionResult.load(
-                Path(args.results_dir) / f"record_{record}_{method}.npz"
-            )
+            original = loaded[(record, method)]
             calibrated = apply_calibration(original, model)
             validations.append(
                 {"record": record, **compare_to_truth(calibrated, truths[record])}
@@ -278,6 +319,24 @@ def command_compare(args: argparse.Namespace) -> None:
     _write_json(rows, args.output)
 
 
+def command_plot(args: argparse.Namespace) -> None:
+    truth = _load_truth(args.truth)
+    results = [ReconstructionResult.load(path) for path in args.results]
+    if args.calibration:
+        models = load_calibrations(args.calibration)
+        results = [apply_calibration(result, models[result.method]) for result in results]
+    report = plot_comparison_slab(
+        truth,
+        results,
+        output=args.output,
+        center_index=args.center_index,
+        slab_layers=args.slab_layers,
+    )
+    if args.metrics_output:
+        _write_json(report, args.metrics_output)
+    print(args.output)
+
+
 def command_validate(args: argparse.Namespace) -> None:
     results = [ReconstructionResult.load(path) for path in args.results]
     methods = {x.method for x in results}
@@ -296,6 +355,16 @@ def command_validate(args: argparse.Namespace) -> None:
             raise ValueError("results do not share the mandatory 64^3 geometry")
         if not np.all(np.isfinite(result.inverse_radiation_length_cm_inv)):
             raise ValueError(f"{result.method} contains non-finite output")
+    by_method = {result.method: result for result in results}
+    classical = [by_method["poca"], by_method["likelihood"]]
+    policies = {result.metadata.get("momentum_policy") for result in classical}
+    if policies != {"mean"}:
+        raise ValueError(
+            "PoCA and likelihood must both declare the shared mean-momentum policy"
+        )
+    assumed = [result.metadata.get("assumed_momentum_mev") for result in classical]
+    if None in assumed or not np.isclose(float(assumed[0]), float(assumed[1])):
+        raise ValueError("PoCA and likelihood do not use the same assumed momentum")
     _write_json(
         {
             "status": "success",
@@ -304,6 +373,8 @@ def command_validate(args: argparse.Namespace) -> None:
             "track_fingerprint_sha256": fingerprints.pop(),
             "truth_geometry_checked": truth is not None,
             "truth_geometry_matches": True if truth is not None else None,
+            "classical_momentum_policy": "mean",
+            "assumed_momentum_mev": float(assumed[0]),
             "spatial_contract": {
                 "canonical_bounds_cm": [list(first.lower_cm), list(first.upper_cm)],
                 "array_indexing": "volume[x,y,z]",
@@ -348,6 +419,16 @@ def build_parser() -> argparse.ArgumentParser:
     recon.add_argument("--max-chunks", type=int)
     recon.add_argument("--iterations", type=int)
     recon.add_argument("--likelihood-mode", choices=("full", "angular"), default="full")
+    recon.add_argument(
+        "--classical-momentum-policy",
+        choices=("mean", "per-track"),
+        help="classical-method momentum information; default comes from config",
+    )
+    recon.add_argument(
+        "--average-momentum-mev",
+        type=float,
+        help="fixed population-average momentum used by both classical methods",
+    )
     recon.set_defaults(func=command_reconstruct)
 
     calibrate = sub.add_parser("calibrate", help="fit all outputs to funny 1/X0 truth")
@@ -357,7 +438,7 @@ def build_parser() -> argparse.ArgumentParser:
     calibrate.add_argument("--config")
     calibrate.add_argument("--fit-records", type=int, nargs="+", default=[0])
     calibrate.add_argument("--validate-records", type=int, nargs="+", default=[1])
-    calibrate.add_argument("--calibration-id", default="funny-v2-spatial")
+    calibrate.add_argument("--calibration-id", default="funny-v3-mean-momentum")
     calibrate.set_defaults(func=command_calibrate)
 
     compare = sub.add_parser("compare", help="compare result files with canonical truth")
@@ -365,6 +446,16 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("results", nargs="+")
     compare.add_argument("--output")
     compare.set_defaults(func=command_compare)
+
+    plot = sub.add_parser("plot", help="plot truth and three calibrated reconstruction slabs")
+    plot.add_argument("--truth", required=True)
+    plot.add_argument("results", nargs=3)
+    plot.add_argument("--calibration")
+    plot.add_argument("--center-index", type=int, default=32)
+    plot.add_argument("--slab-layers", type=int, default=7)
+    plot.add_argument("--output", required=True)
+    plot.add_argument("--metrics-output")
+    plot.set_defaults(func=command_plot)
 
     validate = sub.add_parser("validate", help="validate an aligned three-method result set")
     validate.add_argument("results", nargs="+")

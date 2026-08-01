@@ -5,7 +5,7 @@ tomography methods through one data model, one physical target, and one fixed
 voxel geometry:
 
 - frozen **Mu-Net**
-- momentum-normalized **PoCA**
+- fixed-average-momentum **PoCA**
 - **likelihood/MLEM**, including the muonTruck 2×2 covariance update
 
 The primary output of every method and the simulation truth is
@@ -35,6 +35,9 @@ The following workflows have been exercised successfully on the local samples:
 | All three methods from Geant4 ROOT | passed |
 | Same shape, bounds, axes, and voxel size across methods | passed |
 | Fit on funny record 0 and evaluate on funny record 1 | passed |
+| PoCA/likelihood ignore every per-muon momentum magnitude | passed |
+| PoCA/likelihood use the same configured 3 GeV population prior | passed |
+| Reproducible 2×2 truth/MuNet/PoCA/likelihood slab plot | passed |
 | Unit and synthetic reconstruction tests | passed |
 
 The committed code does not train or fine-tune Mu-Net. The copied weights are
@@ -224,8 +227,12 @@ When expressed in mrad²/cm:
 =25\,\rho_X[\mathrm{cm}^{-1}],
 \]
 
-so \(\rho_X=\lambda_{\mathrm{ref}}/25\). Both constants are recorded in
-configuration and result metadata.
+so \(\rho_X=\lambda_{\mathrm{ref}}/25\). The classical default is a fixed
+population-average prior \(\bar p=3000\) MeV. PoCA and likelihood assign this
+same scalar to every selected event; neither method reads an event's simulated
+momentum magnitude. The prior is configured independently of each record, so
+record-level Geant4 truth cannot leak into reconstruction. Constants and the
+information policy are recorded in configuration and result metadata.
 
 ## Reconstruction methods
 
@@ -249,11 +256,12 @@ operation exists in the supported workflow.
 ### PoCA
 
 For each event, PoCA computes the midpoint of closest approach between the
-incoming and outgoing lines. It deposits
+incoming and outgoing lines. Under the default hardware-compatible information
+policy it deposits
 
 \[
 \widehat{\rho}_{X,i}=
-\frac{p_i^2}{k^2}
+\frac{\bar p^2}{k^2}
 \frac{(\Delta\theta_{x,i}^2+\Delta\theta_{y,i}^2)/2}{L_{i,\mathrm{voxel}}}
 \]
 
@@ -279,7 +287,8 @@ L^2/2+LT & L^3/3+L^2T+LT^2
 
 Track covariance is assembled sparsely over crossed voxels and updated using
 both projected angular and displacement observations. Internal reference
-scattering density is converted to canonical \(1/X_0\).
+scattering density is converted to canonical \(1/X_0\). Every event covariance
+uses the same configured \(\bar p\), not its hidden Geant4 momentum.
 
 The optional `angular` mode is a faster path-integral MLEM using momentum-
 normalized angular observations. It has the same result contract but is a
@@ -305,6 +314,8 @@ muon-tomo reconstruct "$FUNNY" \
   --max-chunks 8 \
   --iterations 10 \
   --likelihood-mode angular \
+  --classical-momentum-policy mean \
+  --average-momentum-mev 3000 \
   --output-dir outputs/funny
 
 muon-tomo reconstruct "$FUNNY" \
@@ -315,6 +326,8 @@ muon-tomo reconstruct "$FUNNY" \
   --max-chunks 8 \
   --iterations 10 \
   --likelihood-mode angular \
+  --classical-momentum-policy mean \
+  --average-momentum-mev 3000 \
   --output-dir outputs/funny
 ```
 
@@ -327,9 +340,15 @@ momenta is stored in every result and must match during validation. Omit
 For full covariance likelihood, replace `angular` with `full`. Refit calibration
 for that mode.
 
+`mean` means a fixed population prior, not the arithmetic mean of hidden
+momenta in the selected simulation record. `per-track` remains available only
+to reproduce earlier studies and is rejected by the aligned-comparison
+validator.
+
 ## Calibrate with `funny`
 
-The accepted `funny-v2-spatial` protocol fits record 0 and evaluates record 1:
+The current `funny-v3-mean-momentum` protocol fits record 0 and evaluates
+record 1 under the fixed-average policy:
 
 ```bash
 muon-tomo calibrate \
@@ -337,8 +356,8 @@ muon-tomo calibrate \
   --results-dir outputs/funny \
   --fit-records 0 \
   --validate-records 1 \
-  --calibration-id funny-v2-spatial \
-  --output calibration/funny-v2-spatial.json
+  --calibration-id funny-v3-mean-momentum \
+  --output configs/funny-v3-mean-momentum.calibration.json
 ```
 
 For each method the calibration code:
@@ -361,9 +380,32 @@ muon-tomo reconstruct "$FUNNY" \
   --record-index 1 \
   --method all \
   --likelihood-mode angular \
-  --calibration calibration/funny-v2-spatial.json \
+  --classical-momentum-policy mean \
+  --average-momentum-mev 3000 \
+  --calibration configs/funny-v3-mean-momentum.calibration.json \
   --output-dir outputs/funny_calibrated
 ```
+
+## Plot the aligned comparison
+
+Generate the four 64×64 panels as a seven-layer mean slab around `z=32`:
+
+```bash
+muon-tomo plot \
+  --truth outputs/funny/record_0_truth.npz \
+  outputs/funny/record_0_munet.npz \
+  outputs/funny/record_0_poca.npz \
+  outputs/funny/record_0_likelihood.npz \
+  --calibration configs/funny-v3-mean-momentum.calibration.json \
+  --center-index 32 \
+  --slab-layers 7 \
+  --output outputs/figures/funny_record0_mean_momentum.png \
+  --metrics-output outputs/funny/record_0_plot_metrics.json
+```
+
+All panels use the same physical colour scale. Each title reports MSE over the
+complete aligned `64³` volume, not over the displayed slab. The truth panel
+labels the silver, lead, and uranium \(1/X_0\) values.
 
 ## Run all methods on Geant4 ROOT
 
@@ -375,6 +417,8 @@ muon-tomo reconstruct "$ROOT_SAMPLE" \
   --max-chunks 1 \
   --iterations 2 \
   --likelihood-mode full \
+  --classical-momentum-policy mean \
+  --average-momentum-mev 3000 \
   --output-dir outputs/root_smoke
 ```
 
@@ -407,7 +451,8 @@ Truth NPZ files contain:
 ## Validate and compare
 
 Validate that truth and a three-method set share the exact grid, orientation,
-scale, and ordered selected-track fingerprint:
+scale, ordered selected-track fingerprint, and shared classical momentum
+policy/value:
 
 ```bash
 muon-tomo validate \
@@ -471,6 +516,7 @@ count separation, TFRecord parsing, and ROOT detector-plane ordering.
 
 - geometry bounds, shape, and axis order;
 - Highland constant and reference momentum;
+- fixed population-average momentum and classical information policy;
 - frozen Mu-Net dosage and feature normalization;
 - PoCA coverage threshold;
 - likelihood initialization, iteration count, and numerical epsilon;
@@ -489,6 +535,7 @@ Each result records:
 - method and algorithm mode;
 - frozen weight path and dosage for Mu-Net;
 - likelihood iteration and convergence history;
+- whether per-muon momentum was used and the assumed population-average value;
 - geometry and units;
 - calibration parameters, if applied.
 

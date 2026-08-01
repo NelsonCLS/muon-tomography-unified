@@ -20,7 +20,7 @@ class CalibrationModel:
     method: str
     slope: float
     intercept: float
-    calibration_id: str = "funny-v2-spatial"
+    calibration_id: str = "funny-v3-mean-momentum"
     target: str = "inverse_radiation_length_cm_inv"
 
     def __post_init__(self) -> None:
@@ -71,7 +71,7 @@ def fit_calibration(
     *,
     erosion_voxels: int = 2,
     fit_intercept: bool = True,
-    calibration_id: str = "funny-v2-spatial",
+    calibration_id: str = "funny-v3-mean-momentum",
 ) -> tuple[CalibrationModel, list[dict[str, float | int | str]]]:
     rows: list[dict[str, float | int | str]] = []
     for result, truth in pairs:

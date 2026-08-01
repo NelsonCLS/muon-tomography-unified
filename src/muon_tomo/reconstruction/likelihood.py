@@ -8,7 +8,7 @@ from ..constants import HIGHLAND_CONSTANT_MEV, REFERENCE_MOMENTUM_MEV
 from ..geometry import GridGeometry
 from ..postprocess import fill_empty_with_six_neighbor_mean
 from ..types import ReconstructionResult, TrackTable
-from .common import prepare_paths
+from .common import prepare_paths, reconstruction_momenta
 
 
 class LikelihoodReconstructor:
@@ -29,6 +29,8 @@ class LikelihoodReconstructor:
         minimum_coverage: int = 1,
         epsilon: float = 1e-12,
         mode: str = "full",
+        momentum_policy: str = "mean",
+        average_momentum_mev: float = REFERENCE_MOMENTUM_MEV,
     ) -> None:
         self.geometry = geometry or GridGeometry()
         self.iterations = int(iterations)
@@ -40,10 +42,13 @@ class LikelihoodReconstructor:
         if mode not in {"full", "angular"}:
             raise ValueError("likelihood mode must be 'full' or 'angular'")
         self.mode = mode
+        self.momentum_policy = momentum_policy
+        self.average_momentum_mev = float(average_momentum_mev)
 
     def _angular_mlem(
         self,
         tracks: TrackTable,
+        momenta_mev: np.ndarray,
         paths: list[np.ndarray],
         lengths: list[np.ndarray],
     ) -> tuple[np.ndarray, list[float]]:
@@ -54,7 +59,7 @@ class LikelihoodReconstructor:
                 np.add.at(sensitivity, ids, lens)
         dtx, dty = tracks.projected_scattering_angles()
         observations = 0.5 * (dtx * dtx + dty * dty) * (
-            tracks.momentum_mev / self.highland_constant_mev
+            momenta_mev / self.highland_constant_mev
         ) ** 2
         history: list[float] = []
         for _ in range(self.iterations):
@@ -75,6 +80,7 @@ class LikelihoodReconstructor:
     def _full_covariance_mlem(
         self,
         tracks: TrackTable,
+        momenta_mev: np.ndarray,
         paths: list[np.ndarray],
         lengths: list[np.ndarray],
     ) -> tuple[np.ndarray, list[float]]:
@@ -87,7 +93,7 @@ class LikelihoodReconstructor:
         predicted_exit = tracks.entry_position_cm + travel[:, None] * tracks.entry_direction
         dx = tracks.exit_position_cm[:, 0] - predicted_exit[:, 0]
         dy = tracks.exit_position_cm[:, 1] - predicted_exit[:, 1]
-        p_relative2 = (self.reference_momentum_mev / tracks.momentum_mev) ** 2
+        p_relative2 = (self.reference_momentum_mev / momenta_mev) ** 2
         history: list[float] = []
 
         prepared_w: list[np.ndarray] = []
@@ -135,10 +141,15 @@ class LikelihoodReconstructor:
 
     def reconstruct(self, tracks: TrackTable) -> ReconstructionResult:
         paths, lengths, occupancy = prepare_paths(tracks, self.geometry)
+        momenta_mev, momentum_metadata = reconstruction_momenta(
+            tracks, self.momentum_policy, self.average_momentum_mev
+        )
         if self.mode == "full":
-            rho, history = self._full_covariance_mlem(tracks, paths, lengths)
+            rho, history = self._full_covariance_mlem(
+                tracks, momenta_mev, paths, lengths
+            )
         else:
-            rho, history = self._angular_mlem(tracks, paths, lengths)
+            rho, history = self._angular_mlem(tracks, momenta_mev, paths, lengths)
         volume = rho.reshape(self.geometry.shape)
         valid = occupancy >= self.minimum_coverage
         volume = np.where(valid, volume, 0.0)
@@ -162,5 +173,6 @@ class LikelihoodReconstructor:
                 "tracks_with_grid_path": int(sum(bool(len(x)) for x in paths)),
                 "occupancy_definition": "number of reconstructed chords crossing each voxel",
                 "empty_voxel_fill": "single-pass mean of in-bounds 6-face neighbors",
+                **momentum_metadata,
             },
         )

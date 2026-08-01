@@ -7,6 +7,8 @@ geometry:
 physics:
   highland_constant_mev: 15.0
   reference_momentum_mev: 3000.0
+  classical_momentum_policy: mean
+  average_momentum_mev: 3000.0
 
 munet:
   dosage: 1024
