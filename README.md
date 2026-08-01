@@ -49,13 +49,16 @@ Every method uses exactly the same `GridGeometry` object:
 | Shape | `(64, 64, 64)` |
 | Axis order | `xyz` |
 | Array convention | `volume[x, y, z]` |
-| Lower bound | `(-100, -100, -100)` cm |
-| Upper bound | `(100, 100, 100)` cm |
-| Voxel size | `(3.125, 3.125, 3.125)` cm |
+| Lower bound | `(-50, -50, -50)` cm |
+| Upper bound | `(50, 50, 50)` cm |
+| Voxel size | `(1.5625, 1.5625, 1.5625)` cm |
 
-Bounds may be changed together for a different apparatus, but the shape remains
-`64³`. The geometry constructor rejects any other shape or axis order. Result
-validation also rejects files that do not share identical geometry.
+These bounds are fixed by the frozen Mu-Net transform
+`normalized = position_cm / 100 + 0.5`: normalized coordinates 0 and 1 are
+exactly -50 and +50 cm. The constructor rejects any other shape, bounds, or axis
+order. Detector track reference planes remain at -100 and +100 cm and are
+independent of the target voxel cube. Result validation rejects files that do
+not share identical geometry or the exact same selected-track fingerprint.
 
 ## Repository layout
 
@@ -152,9 +155,11 @@ hitMomentumX_truth  hitMomentumY_truth  hitMomentumZ_truth
 ```
 
 For every event with at least two hits above and two hits below the cargo, the
-adapter fits two 3-D lines with SVD, intersects them with the common volume, and
-creates the same `TrackTable` used for TFRecord input. The muonTruck conventions
-are retained:
+adapter fits two 3-D lines with SVD and intersects them with fixed detector
+reference planes at -100 and +100 cm. It stores the lower point first and upper
+point second, matching the TFRecord ordering, and creates the same `TrackTable`
+used by all methods. Detector planes are deliberately independent of the
+`[-50,+50]` cm target cube. The muonTruck unit conventions are retained:
 
 - stored hit position to centimetres: `× 0.1`
 - stored momentum to MeV: `× 1000`
@@ -279,11 +284,10 @@ scattering density is converted to canonical \(1/X_0\).
 The optional `angular` mode is a faster path-integral MLEM using momentum-
 normalized angular observations. It has the same result contract but is a
 different estimator; a calibration must only be applied to the mode that
-created it. Its native estimator is already in cm\(^{-1}\). If sparse material
-statistics would give an unphysical negative affine slope, calibration keeps
-the identity map instead of reversing material and air. Zero-occupancy voxels
-use the same single-pass six-face-neighbor fill as PoCA; the coverage mask is
-retained separately.
+created it. Its native estimator is already in cm\(^{-1}\), so likelihood uses
+an identity calibration rather than an unstable material-median affine fit.
+Zero-occupancy voxels use the same single-pass six-face-neighbor fill as PoCA;
+the coverage mask is retained separately.
 
 ## Run all methods on `funny`
 
@@ -314,15 +318,18 @@ muon-tomo reconstruct "$FUNNY" \
   --output-dir outputs/funny
 ```
 
-Omit `--limit` and `--max-chunks` to use every complete Mu-Net chunk and every
-available classical-method event.
+When Mu-Net is included, the selected tracks are trimmed once to a whole number
+of Mu-Net dosage chunks and that exact ordered selection is passed to all three
+methods. A SHA-256 fingerprint over event IDs, positions, directions, and
+momenta is stored in every result and must match during validation. Omit
+`--limit` and `--max-chunks` to use the largest common complete-chunk selection.
 
 For full covariance likelihood, replace `angular` with `full`. Refit calibration
 for that mode.
 
 ## Calibrate with `funny`
 
-The accepted `funny-v1` protocol fits record 0 and evaluates record 1:
+The accepted `funny-v2-spatial` protocol fits record 0 and evaluates record 1:
 
 ```bash
 muon-tomo calibrate \
@@ -330,8 +337,8 @@ muon-tomo calibrate \
   --results-dir outputs/funny \
   --fit-records 0 \
   --validate-records 1 \
-  --calibration-id funny-v1 \
-  --output calibration/funny-v1.json
+  --calibration-id funny-v2-spatial \
+  --output calibration/funny-v2-spatial.json
 ```
 
 For each method the calibration code:
@@ -340,9 +347,9 @@ For each method the calibration code:
 2. erodes non-air material masks by the configured two voxels;
 3. intersects masks with the method's `valid_mask`;
 4. measures robust material-region native values;
-5. fits a versioned, nonnegative-slope affine post-processing map (with an
-   identity fallback for likelihood, whose native estimator is already in
-   cm\(^{-1}\));
+5. fits a versioned, nonnegative-slope affine post-processing map for Mu-Net
+   and PoCA, while retaining identity calibration for likelihood because its
+   native estimator is already in cm\(^{-1}\);
 6. records fit regions and record-1 metrics in the JSON report.
 
 This is post-processing only. Mu-Net weights are not changed.
@@ -354,7 +361,7 @@ muon-tomo reconstruct "$FUNNY" \
   --record-index 1 \
   --method all \
   --likelihood-mode angular \
-  --calibration calibration/funny-v1.json \
+  --calibration calibration/funny-v2-spatial.json \
   --output-dir outputs/funny_calibrated
 ```
 
@@ -399,13 +406,15 @@ Truth NPZ files contain:
 
 ## Validate and compare
 
-Validate that a three-method set shares the exact grid:
+Validate that truth and a three-method set share the exact grid, orientation,
+scale, and ordered selected-track fingerprint:
 
 ```bash
 muon-tomo validate \
   outputs/funny/record_0_munet.npz \
   outputs/funny/record_0_poca.npz \
   outputs/funny/record_0_likelihood.npz \
+  --truth outputs/funny/record_0_truth.npz \
   --output outputs/funny/record_0_validation.json
 ```
 
@@ -450,9 +459,11 @@ TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 \
 pytest -q tests/test_root_integration.py
 ```
 
-Tests cover the `64³` invariant, xyz indexing, exact segment-length accounting,
-unit conversions, material truth, result round-trips, both likelihood modes,
-PoCA count separation, TFRecord parsing, and ROOT event fitting.
+Tests cover the fixed `64³`/±50 cm contract, Mu-Net normalization equivalence,
+positive xyz orientation without swaps or reflections, physical landmark
+mapping, exact selected-track fingerprints, segment-length accounting, unit
+conversions, material truth, result round-trips, both likelihood modes, PoCA
+count separation, TFRecord parsing, and ROOT detector-plane ordering.
 
 ## Configuration
 

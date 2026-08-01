@@ -70,6 +70,17 @@ class TrackTable:
             {**self.metadata, "selection_limit": limit, "selection_seed": seed},
         )
 
+    def take_first(self, count: int) -> "TrackTable":
+        if count < 0 or count > len(self):
+            raise ValueError(f"count must be between 0 and {len(self)}")
+        idx = np.arange(count)
+        return TrackTable(
+            self.entry_position_cm[idx], self.entry_direction[idx],
+            self.exit_position_cm[idx], self.exit_direction[idx],
+            self.momentum_mev[idx], self.event_id[idx], self.source,
+            {**self.metadata, "tracks_taken_from_selection": count},
+        )
+
     def projected_scattering_angles(self) -> tuple[np.ndarray, np.ndarray]:
         """Return signed projected xz and yz scattering angles in radians."""
         incoming = self.entry_direction.copy()
@@ -130,7 +141,8 @@ class ReconstructionResult:
     @property
     def radiation_length_cm(self) -> np.ndarray:
         rho = self.inverse_radiation_length_cm_inv
-        return np.divide(1.0, rho, out=np.full_like(rho, np.inf), where=rho > 0)
+        with np.errstate(over="ignore"):
+            return np.divide(1.0, rho, out=np.full_like(rho, np.inf), where=rho > 0)
 
     @property
     def scattering_density_ref_mrad2_per_cm(self) -> np.ndarray:

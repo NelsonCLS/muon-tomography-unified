@@ -8,8 +8,8 @@ from muon_tomo.types import TrackTable
 def synthetic_tracks():
     rng = np.random.default_rng(7)
     n = 96
-    entry = np.column_stack([rng.uniform(-75, 75, (n, 2)), np.full(n, 100.0)])
-    exit_ = np.column_stack([rng.uniform(-75, 75, (n, 2)), np.full(n, -100.0)])
+    entry = np.column_stack([rng.uniform(-45, 45, (n, 2)), np.full(n, 100.0)])
+    exit_ = np.column_stack([rng.uniform(-45, 45, (n, 2)), np.full(n, -100.0)])
     incoming = exit_ - entry
     incoming /= np.linalg.norm(incoming, axis=1, keepdims=True)
     outgoing = incoming + rng.normal(0.0, 8e-4, incoming.shape)

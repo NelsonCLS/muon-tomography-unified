@@ -47,6 +47,24 @@ def test_likelihood_inverted_fit_falls_back_to_native_cm_inverse():
     assert model.intercept == 0.0
 
 
+def test_likelihood_positive_affine_fit_also_keeps_native_cm_inverse():
+    geometry = GridGeometry()
+    labels = np.zeros((64, 64, 64), dtype=np.int32)
+    labels[:32] = 17
+    truth_values = np.zeros_like(labels, dtype=np.float32)
+    truth_values[:32] = 2.0
+    raw = 0.25 * truth_values + 0.1
+    result = ReconstructionResult(
+        "likelihood", raw, raw, np.ones_like(labels), np.ones_like(labels, dtype=bool), geometry
+    )
+    truth = TruthVolume(labels, truth_values, geometry)
+
+    model, _ = fit_calibration("likelihood", [(result, truth)], erosion_voxels=0)
+
+    assert model.slope == 1.0
+    assert model.intercept == 0.0
+
+
 @pytest.mark.parametrize("method", ["poca", "likelihood"])
 def test_sparse_calibration_preserves_zero_for_invalid_voxels(method):
     geometry = GridGeometry()

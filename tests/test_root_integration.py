@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from muon_tomo.io.root import load_root_tracks
@@ -15,3 +16,8 @@ def test_root_adapter():
     assert len(tracks) == 128
     assert tracks.metadata["format"] == "muontruck_root_hits"
     assert tracks.momentum_mev.min() > 0
+    assert np.allclose(tracks.entry_position_cm[:, 2], -100.0)
+    assert np.allclose(tracks.exit_position_cm[:, 2], 100.0)
+    assert np.all(tracks.entry_direction[:, 2] < 0.0)
+    assert np.all(tracks.exit_direction[:, 2] < 0.0)
+    assert tracks.metadata["track_point_order"] == "lower_then_upper_matching_tfrecord"

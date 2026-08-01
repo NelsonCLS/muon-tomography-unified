@@ -6,15 +6,15 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .constants import AXIS_ORDER, GRID_SHAPE
+from .constants import AXIS_ORDER, GRID_LOWER_CM, GRID_SHAPE, GRID_UPPER_CM
 
 
 @dataclass(frozen=True)
 class GridGeometry:
     """A physical xyz grid whose array indexing is volume[x, y, z]."""
 
-    lower_cm: tuple[float, float, float] = (-100.0, -100.0, -100.0)
-    upper_cm: tuple[float, float, float] = (100.0, 100.0, 100.0)
+    lower_cm: tuple[float, float, float] = GRID_LOWER_CM
+    upper_cm: tuple[float, float, float] = GRID_UPPER_CM
     shape: tuple[int, int, int] = GRID_SHAPE
     axis_order: str = AXIS_ORDER
 
@@ -27,6 +27,10 @@ class GridGeometry:
         upper = np.asarray(self.upper_cm, dtype=float)
         if lower.shape != (3,) or upper.shape != (3,) or np.any(upper <= lower):
             raise ValueError("lower_cm and upper_cm must be increasing xyz triples")
+        if not np.allclose(lower, GRID_LOWER_CM) or not np.allclose(upper, GRID_UPPER_CM):
+            raise ValueError(
+                f"frozen Mu-Net requires canonical bounds {GRID_LOWER_CM} to {GRID_UPPER_CM} cm"
+            )
 
     @property
     def lower(self) -> np.ndarray:
@@ -58,6 +62,10 @@ class GridGeometry:
         point = np.asarray(point_cm, dtype=np.float64)
         scaled = (point - self.lower) / self.voxel_size_cm
         return np.floor(scaled).astype(np.int64)
+
+    def index_to_center(self, index_xyz: np.ndarray) -> np.ndarray:
+        index = np.asarray(index_xyz, dtype=np.float64)
+        return self.lower + (index + 0.5) * self.voxel_size_cm
 
     def contains(self, point_cm: np.ndarray) -> np.ndarray:
         point = np.asarray(point_cm, dtype=np.float64)

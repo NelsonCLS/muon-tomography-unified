@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -63,6 +64,20 @@ def _write_json(payload: object, path: str | None = None) -> None:
         target.write_text(text)
     else:
         print(text, end="")
+
+
+def _track_fingerprint(tracks) -> str:
+    digest = hashlib.sha256()
+    for values, dtype in (
+        (tracks.event_id, "<i8"),
+        (tracks.entry_position_cm, "<f8"),
+        (tracks.entry_direction, "<f8"),
+        (tracks.exit_position_cm, "<f8"),
+        (tracks.exit_direction, "<f8"),
+        (tracks.momentum_mev, "<f8"),
+    ):
+        digest.update(np.asarray(values, dtype=dtype).tobytes(order="C"))
+    return digest.hexdigest()
 
 
 def _save_truth(truth: TruthVolume, path: str | Path) -> Path:
@@ -136,6 +151,15 @@ def command_reconstruct(args: argparse.Namespace) -> None:
     if truth is not None:
         _save_truth(truth, output / f"{stem}_truth.npz")
     methods = ["munet", "poca", "likelihood"] if args.method == "all" else [args.method]
+    if "munet" in methods:
+        dosage = args.dosage or int(cfg["munet"]["dosage"])
+        chunks = len(tracks) // dosage
+        if args.max_chunks is not None:
+            chunks = min(chunks, args.max_chunks)
+        if chunks < 1:
+            raise ValueError(f"Mu-Net {dosage} needs at least {dosage} tracks")
+        tracks = tracks.take_first(chunks * dosage)
+    track_fingerprint = _track_fingerprint(tracks)
     calibration = load_calibrations(args.calibration) if args.calibration else {}
     created = []
     for method in methods:
@@ -176,6 +200,8 @@ def command_reconstruct(args: argparse.Namespace) -> None:
                 "input_format": _format(args.input, args.format),
                 "record_index": args.record_index,
                 "track_selection": tracks.metadata,
+                "track_count": len(tracks),
+                "track_fingerprint_sha256": track_fingerprint,
             }
         )
         if method in calibration:
@@ -184,7 +210,12 @@ def command_reconstruct(args: argparse.Namespace) -> None:
         created.append(str(target))
         print(target)
     _write_json(
-        {"created": created, "geometry": geometry.metadata(), "tracks": len(tracks)},
+        {
+            "created": created,
+            "geometry": geometry.metadata(),
+            "tracks": len(tracks),
+            "track_fingerprint_sha256": track_fingerprint,
+        },
         str(output / f"{stem}_manifest.json"),
     )
 
@@ -254,13 +285,32 @@ def command_validate(args: argparse.Namespace) -> None:
     if methods != expected:
         raise ValueError(f"expected exactly {sorted(expected)}, got {sorted(methods)}")
     first = results[0].geometry
+    truth = _load_truth(args.truth) if args.truth else None
+    if truth is not None and truth.geometry != first:
+        raise ValueError("truth and reconstruction results do not share identical geometry")
+    fingerprints = {result.metadata.get("track_fingerprint_sha256") for result in results}
+    if None in fingerprints or len(fingerprints) != 1:
+        raise ValueError("results do not record the same exact selected-track fingerprint")
     for result in results:
         if result.geometry != first or result.inverse_radiation_length_cm_inv.shape != (64, 64, 64):
             raise ValueError("results do not share the mandatory 64^3 geometry")
         if not np.all(np.isfinite(result.inverse_radiation_length_cm_inv)):
             raise ValueError(f"{result.method} contains non-finite output")
     _write_json(
-        {"status": "success", "methods": sorted(methods), "geometry": first.metadata()},
+        {
+            "status": "success",
+            "methods": sorted(methods),
+            "geometry": first.metadata(),
+            "track_fingerprint_sha256": fingerprints.pop(),
+            "truth_geometry_checked": truth is not None,
+            "truth_geometry_matches": True if truth is not None else None,
+            "spatial_contract": {
+                "canonical_bounds_cm": [list(first.lower_cm), list(first.upper_cm)],
+                "array_indexing": "volume[x,y,z]",
+                "orientation": "+x,+y,+z increase with array indices",
+                "munet_normalized_bounds": [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]],
+            },
+        },
         args.output,
     )
 
@@ -307,7 +357,7 @@ def build_parser() -> argparse.ArgumentParser:
     calibrate.add_argument("--config")
     calibrate.add_argument("--fit-records", type=int, nargs="+", default=[0])
     calibrate.add_argument("--validate-records", type=int, nargs="+", default=[1])
-    calibrate.add_argument("--calibration-id", default="funny-v1")
+    calibrate.add_argument("--calibration-id", default="funny-v2-spatial")
     calibrate.set_defaults(func=command_calibrate)
 
     compare = sub.add_parser("compare", help="compare result files with canonical truth")
@@ -318,6 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = sub.add_parser("validate", help="validate an aligned three-method result set")
     validate.add_argument("results", nargs="+")
+    validate.add_argument("--truth")
     validate.add_argument("--output")
     validate.set_defaults(func=command_validate)
     return parser

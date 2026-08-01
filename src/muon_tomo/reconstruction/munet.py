@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ..constants import MUNET_POSITION_OFFSET, MUNET_POSITION_SCALE_CM
 from ..geometry import GridGeometry
 from ..types import ReconstructionResult, TrackTable
 from .common import path_occupancy
@@ -18,8 +19,8 @@ class MuNetReconstructor:
         *,
         dosage: int = 1024,
         weights_path: str | Path | None = None,
-        position_scale_cm: float = 100.0,
-        position_offset: float = 0.5,
+        position_scale_cm: float = MUNET_POSITION_SCALE_CM,
+        position_offset: float = MUNET_POSITION_OFFSET,
         max_chunks: int | None = None,
     ) -> None:
         self.geometry = geometry or GridGeometry()
@@ -31,6 +32,14 @@ class MuNetReconstructor:
         self.position_scale_cm = float(position_scale_cm)
         self.position_offset = float(position_offset)
         self.max_chunks = max_chunks
+        expected_lower = np.full(3, -self.position_offset * self.position_scale_cm)
+        expected_upper = np.full(3, (1.0 - self.position_offset) * self.position_scale_cm)
+        if not np.allclose(self.geometry.lower, expected_lower) or not np.allclose(
+            self.geometry.upper, expected_upper
+        ):
+            raise ValueError(
+                "Mu-Net position normalization and GridGeometry bounds describe different physical domains"
+            )
 
     def _features(self, tracks: TrackTable) -> np.ndarray:
         incoming = tracks.entry_direction.astype(np.float32)
@@ -80,7 +89,7 @@ class MuNetReconstructor:
                 raise ValueError(f"Mu-Net returned {prediction.shape}, expected {self.geometry.shape}")
             total += prediction
         raw = (total / chunks).astype(np.float32)
-        used = tracks.subset(chunks * self.dosage, seed=0)
+        used = tracks.take_first(chunks * self.dosage)
         occupancy = path_occupancy(used, self.geometry)
         return ReconstructionResult(
             method="munet",

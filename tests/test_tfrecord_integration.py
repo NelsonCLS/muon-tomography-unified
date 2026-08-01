@@ -19,3 +19,9 @@ def test_funny_schema_and_truth():
     assert truth.material_labels.shape == (64, 64, 64)
     assert set(np.unique(truth.material_labels)) == {0, 17, 19, 21}
     assert np.isfinite(truth.inverse_radiation_length_cm_inv).all()
+    assert truth.geometry.lower_cm == (-50.0, -50.0, -50.0)
+    assert truth.geometry.upper_cm == (50.0, 50.0, 50.0)
+    normalized_lower = truth.geometry.lower / 100.0 + 0.5
+    normalized_upper = truth.geometry.upper / 100.0 + 0.5
+    assert np.allclose(normalized_lower, 0.0)
+    assert np.allclose(normalized_upper, 1.0)

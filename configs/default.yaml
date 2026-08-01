@@ -1,7 +1,7 @@
 geometry:
   shape: [64, 64, 64]
-  lower_cm: [-100.0, -100.0, -100.0]
-  upper_cm: [100.0, 100.0, 100.0]
+  lower_cm: [-50.0, -50.0, -50.0]
+  upper_cm: [50.0, 50.0, 50.0]
   axis_order: xyz
 
 physics:

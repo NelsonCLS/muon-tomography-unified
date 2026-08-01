@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
+from ..constants import TRACK_PLANE_LOWER_CM, TRACK_PLANE_UPPER_CM
 from ..geometry import GridGeometry
 from ..types import TrackTable
 
@@ -37,6 +38,8 @@ def load_root_tracks(
     tree_name: str = "hits",
     position_scale_cm_per_stored_unit: float = 0.1,
     momentum_scale_mev_per_stored_unit: float = 1000.0,
+    track_plane_lower_cm: float = TRACK_PLANE_LOWER_CM,
+    track_plane_upper_cm: float = TRACK_PLANE_UPPER_CM,
     limit: int | None = None,
     seed: int = 0,
 ) -> TrackTable:
@@ -77,14 +80,16 @@ def load_root_tracks(
             continue
         upper_point, upper_dir = _fit_line(upper)
         lower_point, lower_dir = _fit_line(lower)
-        entry = _plane_intersection(upper_point, upper_dir, grid.upper[2])
-        exit_ = _plane_intersection(lower_point, lower_dir, grid.lower[2])
-        if entry is None or exit_ is None:
+        first = _plane_intersection(lower_point, lower_dir, track_plane_lower_cm)
+        second = _plane_intersection(upper_point, upper_dir, track_plane_upper_cm)
+        if first is None or second is None:
             continue
         momentum = float(np.linalg.norm(momenta[start])) * momentum_scale_mev_per_stored_unit
         if not np.isfinite(momentum) or momentum <= 0:
             continue
-        p0s.append(entry); d0s.append(upper_dir); p1s.append(exit_); d1s.append(lower_dir)
+        # Match the frozen Mu-Net TFRecord ordering: lower detector point and
+        # direction first, upper detector point and direction second.
+        p0s.append(first); d0s.append(lower_dir); p1s.append(second); d1s.append(upper_dir)
         ps.append(momentum); ids.append(int(event[start]))
 
     tracks = TrackTable(
@@ -95,6 +100,9 @@ def load_root_tracks(
             "tree": tree_name,
             "stored_position_to_cm": position_scale_cm_per_stored_unit,
             "stored_momentum_to_mev": momentum_scale_mev_per_stored_unit,
+            "track_plane_lower_cm": track_plane_lower_cm,
+            "track_plane_upper_cm": track_plane_upper_cm,
+            "track_point_order": "lower_then_upper_matching_tfrecord",
             "events_seen": int(len(starts)),
             "events_reconstructed": int(len(ps)),
         },

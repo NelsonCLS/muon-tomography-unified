@@ -20,7 +20,7 @@ class CalibrationModel:
     method: str
     slope: float
     intercept: float
-    calibration_id: str = "funny-v1"
+    calibration_id: str = "funny-v2-spatial"
     target: str = "inverse_radiation_length_cm_inv"
 
     def __post_init__(self) -> None:
@@ -71,7 +71,7 @@ def fit_calibration(
     *,
     erosion_voxels: int = 2,
     fit_intercept: bool = True,
-    calibration_id: str = "funny-v1",
+    calibration_id: str = "funny-v2-spatial",
 ) -> tuple[CalibrationModel, list[dict[str, float | int | str]]]:
     rows: list[dict[str, float | int | str]] = []
     for result, truth in pairs:
@@ -89,15 +89,13 @@ def fit_calibration(
     else:
         slope = float(np.dot(w * x, w * y) / max(np.dot(w * x, w * x), 1e-20))
         intercept = 0.0
-    # Angular MLEM already reports its native estimator in cm^-1. Sparse or
-    # weakly sampled material medians can make an unconstrained affine fit
-    # negative, which would invert material and air. Preserve the native unit
-    # instead of accepting an unphysical response reversal.
-    if slope < 0.0:
-        if method == "likelihood":
-            slope, intercept = 1.0, 0.0
-        else:
-            raise ValueError(f"{method} calibration produced an unphysical negative slope")
+    # Likelihood already reports its native estimator in cm^-1. Material-median
+    # affine fits are unstable under sparse coverage and can either invert or
+    # greatly amplify the field, so retain the physical native scale.
+    if method == "likelihood":
+        slope, intercept = 1.0, 0.0
+    elif slope < 0.0:
+        raise ValueError(f"{method} calibration produced an unphysical negative slope")
     return CalibrationModel(method, float(slope), float(intercept), calibration_id), rows
 
 
