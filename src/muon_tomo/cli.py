@@ -18,6 +18,7 @@ from .io import inspect_tfrecord, load_root_tracks, load_tfrecord_record
 from .plotting import plot_comparison_slab
 from .plotting3d import plot_comparison_3d
 from .reconstruction import LikelihoodReconstructor, MuNetReconstructor, PoCAReconstructor
+from .stability import write_errored_tfrecord
 from .types import ReconstructionResult, TruthVolume
 
 DEFAULT_CONFIG = Path(__file__).parents[2] / "configs" / "default.yaml"
@@ -330,6 +331,111 @@ def command_compare(args: argparse.Namespace) -> None:
     _write_json(rows, args.output)
 
 
+def command_stability(args: argparse.Namespace) -> None:
+    """Create one fixed detector-error dataset and run paired reconstructions."""
+    cfg = _config(args.config)
+    geometry = _geometry(cfg)
+    output = Path(args.output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    errored_input = output / "record_0_detector_error.tfrecord"
+    error_report = write_errored_tfrecord(
+        args.dataset,
+        errored_input,
+        record_index=args.record_index,
+        seed=args.error_seed,
+        position_sigma_cm=args.position_sigma_cm,
+        angular_sigma_deg=args.angular_sigma_deg,
+    )
+    clean_tracks, truth = load_tfrecord_record(
+        args.dataset, args.record_index, geometry=geometry, limit=args.limit, seed=args.seed
+    )
+    errored_tracks, errored_truth = load_tfrecord_record(
+        errored_input, 0, geometry=geometry, limit=args.limit, seed=args.seed
+    )
+    if not np.array_equal(truth.material_labels, errored_truth.material_labels):
+        raise ValueError("errored dataset truth differs from clean truth")
+    dosage = int(cfg["munet"]["dosage"])
+    count = min(len(clean_tracks), len(errored_tracks)) // dosage * dosage
+    if count < dosage:
+        raise ValueError(f"need at least {dosage} tracks for Mu-Net")
+    clean_tracks = clean_tracks.take_first(count)
+    errored_tracks = errored_tracks.take_first(count)
+    calibration = load_calibrations(args.calibration) if args.calibration else {}
+    average_momentum_mev = float(cfg["physics"]["average_momentum_mev"])
+
+    def reconstruct(tracks, label: str):
+        import tensorflow as tf
+
+        tf.random.set_seed(args.munet_seed)
+        reconstructors = [
+            MuNetReconstructor(
+                geometry, dosage=dosage, max_chunks=count // dosage,
+                position_scale_cm=float(cfg["munet"]["position_scale_cm"]),
+                position_offset=float(cfg["munet"]["position_offset"]),
+            ),
+            PoCAReconstructor(
+                geometry,
+                highland_constant_mev=float(cfg["physics"]["highland_constant_mev"]),
+                minimum_coverage=int(cfg["poca"]["minimum_coverage"]),
+                momentum_policy="mean", average_momentum_mev=average_momentum_mev,
+            ),
+            LikelihoodReconstructor(
+                geometry, iterations=args.iterations,
+                reference_momentum_mev=float(cfg["physics"]["reference_momentum_mev"]),
+                highland_constant_mev=float(cfg["physics"]["highland_constant_mev"]),
+                initial_inverse_radiation_length_cm_inv=float(cfg["likelihood"]["initial_inverse_radiation_length_cm_inv"]),
+                minimum_coverage=int(cfg["likelihood"]["minimum_coverage"]),
+                epsilon=float(cfg["likelihood"]["epsilon"]), mode="full",
+                momentum_policy="mean", average_momentum_mev=average_momentum_mev,
+                update_statistic=cfg["likelihood"].get("update_statistic", "median"),
+                angular_resolution_rad=float(cfg["likelihood"]["angular_resolution_rad"]),
+                position_resolution_cm=float(cfg["likelihood"]["position_resolution_cm"]),
+                maximum_inverse_radiation_length_cm_inv=float(cfg["likelihood"]["maximum_inverse_radiation_length_cm_inv"]),
+            ),
+        ]
+        fingerprint = _track_fingerprint(tracks)
+        rows = {}
+        for reconstructor in reconstructors:
+            result = reconstructor.reconstruct(tracks)
+            result.metadata.update({
+                "stability_scenario": label,
+                "track_count": len(tracks),
+                "track_fingerprint_sha256": fingerprint,
+                "error_dataset": error_report if label == "errored" else None,
+            })
+            if result.method in calibration:
+                result = apply_calibration(result, calibration[result.method])
+            result.save(output / f"record_{args.record_index}_{label}_{result.method}.npz")
+            rows[result.method] = compare_to_truth(result, truth)
+        return fingerprint, rows
+
+    _save_truth(truth, output / f"record_{args.record_index}_truth.npz")
+    clean_fingerprint, clean = reconstruct(clean_tracks, "clean")
+    errored_fingerprint, errored = reconstruct(errored_tracks, "errored")
+    comparison = []
+    for method in ("munet", "poca", "likelihood"):
+        baseline = clean[method]
+        perturbed = errored[method]
+        clean_mse = float(baseline["mse_full_grid_cm_inv_squared"])
+        errored_mse = float(perturbed["mse_full_grid_cm_inv_squared"])
+        comparison.append({
+            "method": method,
+            "clean_mse_full_grid_cm_inv_squared": clean_mse,
+            "errored_mse_full_grid_cm_inv_squared": errored_mse,
+            "delta_mse_cm_inv_squared": errored_mse - clean_mse,
+            "mse_ratio_errored_to_clean": errored_mse / clean_mse if clean_mse else None,
+        })
+    _write_json({
+        "status": "success", "tracks_per_scenario": count,
+        "calibration": str(Path(args.calibration).resolve()) if args.calibration else None,
+        "clean_track_fingerprint_sha256": clean_fingerprint,
+        "errored_track_fingerprint_sha256": errored_fingerprint,
+        "error_dataset": error_report,
+        "comparison": comparison,
+    }, output / "stability_mse_comparison.json")
+    print(output / "stability_mse_comparison.json")
+
+
 def command_plot(args: argparse.Namespace) -> None:
     truth = _load_truth(args.truth)
     results = [ReconstructionResult.load(path) for path in args.results]
@@ -480,6 +586,21 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("results", nargs="+")
     compare.add_argument("--output")
     compare.set_defaults(func=command_compare)
+
+    stability = sub.add_parser("stability", help="run a paired fixed detector-error stability test")
+    stability.add_argument("--dataset", required=True)
+    stability.add_argument("--output-dir", required=True)
+    stability.add_argument("--config")
+    stability.add_argument("--calibration")
+    stability.add_argument("--record-index", type=int, default=0)
+    stability.add_argument("--limit", type=int, default=8192)
+    stability.add_argument("--seed", type=int, default=0)
+    stability.add_argument("--error-seed", type=int, default=20260803)
+    stability.add_argument("--munet-seed", type=int, default=20260803)
+    stability.add_argument("--position-sigma-cm", type=float, default=0.29)
+    stability.add_argument("--angular-sigma-deg", type=float, default=0.5)
+    stability.add_argument("--iterations", type=int, default=10)
+    stability.set_defaults(func=command_stability)
 
     plot = sub.add_parser("plot", help="plot truth and three calibrated reconstruction slabs")
     plot.add_argument("--truth", required=True)

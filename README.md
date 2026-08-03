@@ -373,6 +373,32 @@ momenta in the selected simulation record. `per-track` remains available only
 to reproduce earlier studies and is rejected by the aligned-comparison
 validator.
 
+## Fixed detector-error stability test
+
+Create one reproducible, standalone error-perturbed TFRecord and compare clean
+and errored 8,192-track reconstructions without retraining or recalibrating:
+
+```bash
+muon-tomo stability \
+  --dataset "$FUNNY" \
+  --record-index 0 \
+  --limit 8192 \
+  --position-sigma-cm 0.29 \
+  --angular-sigma-deg 0.5 \
+  --error-seed 20260803 \
+  --munet-seed 20260803 \
+  --iterations 10 \
+  --calibration configs/funny-v4-robust-mlsd.calibration.json \
+  --output-dir outputs/stability/funny_record0_8192
+```
+
+The command preserves both z coordinates and entry momentum magnitudes, then
+rotates normalized entry and exit directions by an isotropic Gaussian angular
+error. It records measured residuals, writes the derived GZIP TFRecord, both
+three-method result sets, and `stability_mse_comparison.json`. The same
+calibration is applied to clean and errored reconstructions; it is never fit to
+the perturbed data.
+
 ## Calibrate with `funny`
 
 The current `funny-v4-robust-mlsd` protocol fits record 0 and evaluates
