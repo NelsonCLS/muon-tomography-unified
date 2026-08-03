@@ -11,7 +11,6 @@ import numpy as np
 from scipy.ndimage import binary_erosion
 
 from .constants import MATERIAL_NAMES
-from .postprocess import fill_empty_with_six_neighbor_mean
 from .types import ReconstructionResult, TruthVolume
 
 
@@ -118,10 +117,6 @@ def apply_calibration(result: ReconstructionResult, model: CalibrationModel) -> 
         raise ValueError(f"calibration is for {model.method}, result is {result.method}")
     calibrated = model.apply(result.raw_estimator)
     calibrated = np.where(result.valid_mask, calibrated, 0.0)
-    if result.method in {"poca", "likelihood"}:
-        calibrated = fill_empty_with_six_neighbor_mean(
-            calibrated, result.occupancy_count == 0
-        )
     return ReconstructionResult(
         result.method,
         calibrated,

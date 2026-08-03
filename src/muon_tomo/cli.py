@@ -633,7 +633,7 @@ def build_parser() -> argparse.ArgumentParser:
     plot3d.add_argument(
         "--threshold-cm-inv",
         type=float,
-        default=0.5,
+        default=0.7,
         help="display voxels at or above this 1/X0 threshold; lower values are fully transparent",
     )
     plot3d.add_argument(

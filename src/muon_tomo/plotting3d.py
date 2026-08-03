@@ -172,7 +172,7 @@ def plot_comparison_3d(
     results: list[ReconstructionResult],
     *,
     output: str | Path,
-    threshold_cm_inv: float = 0.5,
+    threshold_cm_inv: float = 0.7,
     max_cubes: int = 12000,
     opacity: float = 0.6,
     surface_only: bool = False,

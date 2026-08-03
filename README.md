@@ -287,11 +287,10 @@ policy it deposits
 
 in the PoCA voxel. Values are averaged over events assigned to that voxel.
 `occupancy_count` is the number of localized events and is never presented as
-the reconstruction itself. In the primary prediction, each zero-occupancy
-voxel is filled by one synchronous mean of its in-bounds six face-connected
-neighbors, both before and after calibration. Measured voxels are unchanged,
-while `valid_mask` separately records whether a voxel met the configured
-coverage threshold.
+the reconstruction itself. Zero-occupancy PoCA and likelihood voxels remain
+zero before and after calibration. Measured voxels are unchanged, while
+`valid_mask` separately records whether a voxel met the configured coverage
+threshold.
 
 ### Likelihood/MLEM
 
@@ -327,7 +326,7 @@ calibration. Full likelihood is calibrated from eroded, covered material-region
 means because its sparse voxel distribution is strongly skewed; Mu-Net and
 PoCA retain material medians. Calibration is bounded to the truth range present
 in the calibration sample. Zero-occupancy voxels use the same single-pass
-six-face-neighbor fill as PoCA; the coverage mask is retained separately.
+zero-occupancy voxels remain zero; the coverage mask is retained separately.
 
 ## Run all methods on `funny`
 
@@ -489,7 +488,7 @@ muon-tomo plot3d \
   outputs/funny/record_0_poca.npz \
   outputs/funny/record_0_likelihood.npz \
   --calibration configs/funny-v4-robust-mlsd.calibration.json \
-  --threshold-cm-inv 0.1 \
+  --threshold-cm-inv 0.7 \
   --opacity 0.60 \
   --max-cubes 12000 \
   --output outputs/figures/funny_record0_3d_voxels.html \
@@ -578,7 +577,7 @@ muon-tomo compare \
 ```
 
 Every comparison reports MSE over the complete aligned `64³` grid, after the
-six-face-neighbor fill for zero-occupancy PoCA and likelihood voxels. It also
+zero values for zero-occupancy PoCA and likelihood voxels. It also
 reports coverage-conditioned MAE, RMSE, bias, coverage, and value ranges in
 cm⁻¹. Cross-section figures always annotate the full-volume `64³` MSE, never a
 slice-only MSE.
