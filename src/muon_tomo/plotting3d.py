@@ -175,7 +175,7 @@ def plot_comparison_3d(
     threshold_cm_inv: float = 0.1,
     max_cubes: int = 12000,
     opacity: float = 0.6,
-    surface_only: bool = True,
+    surface_only: bool = False,
 ) -> dict[str, object]:
     """Write a rotatable HTML viewer with selectable aligned voxel-cube volumes."""
     try:

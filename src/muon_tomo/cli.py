@@ -363,7 +363,7 @@ def command_plot3d(args: argparse.Namespace) -> None:
         threshold_cm_inv=args.threshold_cm_inv,
         max_cubes=args.max_cubes,
         opacity=args.opacity,
-        surface_only=not args.include_interior,
+        surface_only=args.surface_only,
     )
     if args.metrics_output:
         _write_json(report, args.metrics_output)
@@ -528,9 +528,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="maximum voxel opacity; lower-density cubes are more transparent",
     )
     plot3d.add_argument(
-        "--include-interior",
+        "--surface-only",
         action="store_true",
-        help="include interior thresholded voxels; surface cubes are the default",
+        help="draw only thresholded surface voxels (interiors are shown by default)",
     )
     plot3d.add_argument("--output", required=True)
     plot3d.add_argument("--metrics-output")

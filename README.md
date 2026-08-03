@@ -476,8 +476,9 @@ and the gray wireframe marks the complete reconstruction boundary. Opacity
 increases monotonically with density and is capped by `--opacity`; the default
 maximum is 0.60.
 
-To keep rotation responsive, the default draws thresholded six-neighbor
-surface cubes and deterministically caps each volume at `--max-cubes`.
+The viewer includes thresholded interior cubes by default and deterministically
+caps each volume at `--max-cubes`. Use `--surface-only` for a smaller boundary
+focused view when rotation performance is more important than interior detail.
 `--include-interior` draws interior cubes too, but can produce a much larger
 HTML file and substantially higher browser memory use. The JSON report records
 eligible and displayed cube counts so subsampling is never hidden.
