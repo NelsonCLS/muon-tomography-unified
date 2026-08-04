@@ -235,10 +235,18 @@ def plot_comparison_3d(
     button_labels: list[str] = []
     panel_trace_indices: list[list[int]] = []
     for panel_index, (label, volume, metrics, discrete) in enumerate(panels):
+        # Keep the truth volume complete so solid material is not made sparse
+        # by the responsiveness cap used for reconstructed volumes.
+        panel_max_cubes = max_cubes
+        if discrete:
+            panel_max_cubes = max(
+                max_cubes,
+                int(np.count_nonzero(np.isfinite(volume) & (volume >= threshold_cm_inv))),
+            )
         indices, values, candidates = _select_voxels(
             volume,
             threshold_cm_inv,
-            max_cubes,
+            panel_max_cubes,
             surface_only=surface_only,
             separate_regions=discrete,
             seed=panel_index,
