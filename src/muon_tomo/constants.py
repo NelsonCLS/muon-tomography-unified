@@ -16,10 +16,28 @@ HIGHLAND_CONSTANT_MEV = 15.0
 REFERENCE_MOMENTUM_MEV = 3000.0
 
 MATERIAL_NAMES = (
-    "air", "benzene", "methanol", "water", "magnesium", "concrete",
-    "gypsum", "calcium", "sulfur", "silicon", "aluminium", "caesium",
-    "manganese", "iron", "iodine", "nickel", "molybdenum", "silver",
-    "polonium", "lead", "gold", "uranium",
+    "air",
+    "benzene",
+    "methanol",
+    "water",
+    "magnesium",
+    "concrete",
+    "gypsum",
+    "calcium",
+    "sulfur",
+    "silicon",
+    "aluminium",
+    "caesium",
+    "manganese",
+    "iron",
+    "iodine",
+    "nickel",
+    "molybdenum",
+    "silver",
+    "polonium",
+    "lead",
+    "gold",
+    "uranium",
 )
 
 # Radiation lengths in centimetres, copied from the Mu-Net truth definition.

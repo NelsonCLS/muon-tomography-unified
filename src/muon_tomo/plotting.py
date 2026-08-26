@@ -11,9 +11,7 @@ from .constants import INVERSE_RADIATION_LENGTH_CM_INV, MATERIAL_NAMES
 from .types import ReconstructionResult, TruthVolume
 
 
-def _z_slab(
-    volume: np.ndarray, center_index: int, slab_layers: int
-) -> tuple[np.ndarray, int, int]:
+def _z_slab(volume: np.ndarray, center_index: int, slab_layers: int) -> tuple[np.ndarray, int, int]:
     if slab_layers < 1 or slab_layers % 2 != 1:
         raise ValueError("slab_layers must be a positive odd number")
     half = slab_layers // 2
@@ -76,6 +74,7 @@ def plot_comparison_slab(
     """Write a 2x2 truth/MuNet/PoCA/likelihood projection comparison."""
     try:
         import matplotlib.pyplot as plt
+        from matplotlib.patches import Patch
     except ImportError as exc:
         raise RuntimeError("plotting requires the 'plot' optional dependency") from exc
 
@@ -122,7 +121,7 @@ def plot_comparison_slab(
     plane_axes = [name for name in ("x", "y", "z") if name != projection_axis]
     horizontal, vertical = plane_axes
     images = []
-    for axis, (label, slab, mse) in zip(axes.flat, panels):
+    for axis, (label, slab, mse) in zip(axes.flat, panels, strict=True):
         image = axis.imshow(
             slab.T,
             origin="lower",
@@ -162,21 +161,49 @@ def plot_comparison_slab(
         else "Momentum policy not recorded"
     )
     depth_text = (
-        f"full-depth mean over {projection_axis}=0–{last} ({last + 1} layers)"
+        f"full-depth mean over {projection_axis}=0-{last} ({last + 1} layers)"
         if full_depth
-        else (
-            f"mean {projection_axis} slab {first}–{last} "
-            f"({slab_layers} layers)"
-        )
+        else (f"mean {projection_axis} slab {first}-{last} ({slab_layers} layers)")
     )
-    fig.suptitle(
-        f"Funny record comparison — {depth_text}\n{policy_text}", fontsize=13
-    )
+    fig.suptitle(f"Funny record comparison — {depth_text}\n{policy_text}", fontsize=13)
     fig.colorbar(
         images[0],
         ax=axes,
         label="inverse radiation length 1/X₀ [cm⁻¹]",
         shrink=0.9,
+    )
+    material_colors = {
+        0: "#111111",  # air
+        17: "#BFC5CC",  # silver
+        19: "#58636D",  # lead
+        21: "#D9A441",  # uranium
+    }
+    norm = plt.Normalize(vmin=0.0, vmax=vmax)
+    legend_handles = [
+        Patch(
+            facecolor=material_colors.get(
+                label, plt.get_cmap("magma")(norm(INVERSE_RADIATION_LENGTH_CM_INV[label]))
+            ),
+            edgecolor="white",
+            linewidth=0.8,
+            label=(
+                f"{MATERIAL_NAMES[label].title()}  "
+                f"{INVERSE_RADIATION_LENGTH_CM_INV[label]:.3f} cm⁻¹"
+            ),
+        )
+        for label in [0, *labels]
+    ]
+    axes.flat[0].legend(
+        handles=legend_handles,
+        loc="lower left",
+        title="Truth material / 1/X₀",
+        fontsize=9,
+        title_fontsize=10,
+        frameon=True,
+        framealpha=0.92,
+        facecolor="#222222",
+        edgecolor="white",
+        labelcolor="white",
     )
     target = Path(output)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -190,14 +217,10 @@ def plot_comparison_slab(
         "slab_last_axis_index": last,
         "slab_layers": last - first + 1,
         "projection": (
-            f"full-depth {projection_axis} mean"
-            if full_depth
-            else f"{projection_axis}-slab mean"
+            f"full-depth {projection_axis} mean" if full_depth else f"{projection_axis}-slab mean"
         ),
         "mse_scope": "full aligned 64^3 grid",
-        "classical_momentum_policy": by_method["poca"].metadata.get(
-            "momentum_policy"
-        ),
+        "classical_momentum_policy": by_method["poca"].metadata.get("momentum_policy"),
         "assumed_momentum_mev": mean_p,
         "methods": metrics,
     }

@@ -68,18 +68,18 @@ class LikelihoodReconstructor:
     ) -> tuple[np.ndarray, list[float]]:
         rho = np.full(self.geometry.n_voxels, self.initial_rho, dtype=np.float64)
         sensitivity = np.zeros_like(rho)
-        for ids, lens in zip(paths, lengths):
+        for ids, lens in zip(paths, lengths, strict=True):
             if len(ids):
                 np.add.at(sensitivity, ids, lens)
         dtx, dty = tracks.projected_scattering_angles()
-        observations = 0.5 * (dtx * dtx + dty * dty) * (
-            momenta_mev / self.highland_constant_mev
-        ) ** 2
+        observations = (
+            0.5 * (dtx * dtx + dty * dty) * (momenta_mev / self.highland_constant_mev) ** 2
+        )
         history: list[float] = []
         for _ in range(self.iterations):
             numerator = np.zeros_like(rho)
             residual = []
-            for obs, ids, lens in zip(observations, paths, lengths):
+            for obs, ids, lens in zip(observations, paths, lengths, strict=True):
                 if not len(ids):
                     continue
                 predicted = max(float(np.dot(rho[ids], lens)), self.epsilon)
@@ -100,9 +100,7 @@ class LikelihoodReconstructor:
     ) -> tuple[np.ndarray, list[float], int]:
         scale = (self.highland_constant_mev / self.reference_momentum_mev) ** 2
         lambda_ref = np.full(self.geometry.n_voxels, self.initial_rho * scale, dtype=np.float64)
-        starts, incoming, ends, outgoing = physical_grid_intersections(
-            tracks, self.geometry
-        )
+        starts, incoming, ends, outgoing = physical_grid_intersections(tracks, self.geometry)
         theta_x_in = np.arctan(incoming[:, 0] / np.abs(incoming[:, 2]))
         theta_y_in = np.arctan(incoming[:, 1] / np.abs(incoming[:, 2]))
         theta_x_out = np.arctan(outgoing[:, 0] / np.abs(outgoing[:, 2]))
@@ -135,9 +133,7 @@ class LikelihoodReconstructor:
         p_relative2 = (self.reference_momentum_mev / momenta_mev) ** 2
         history: list[float] = []
         clipped_total = 0
-        error_covariance = np.diag(
-            [self.angular_resolution_rad**2, self.position_resolution_cm**2]
-        )
+        error_covariance = np.diag([self.angular_resolution_rad**2, self.position_resolution_cm**2])
 
         prepared_w: list[np.ndarray] = []
         for lens in lengths:
@@ -152,7 +148,7 @@ class LikelihoodReconstructor:
         for _ in range(self.iterations):
             score_ids: list[np.ndarray] = []
             score_values: list[np.ndarray] = []
-            for i, (ids, w) in enumerate(zip(paths, prepared_w)):
+            for i, (ids, w) in enumerate(zip(paths, prepared_w, strict=True)):
                 if not len(ids) or not np.isfinite(dx[i]) or not np.isfinite(dy[i]):
                     continue
                 covariance = (
@@ -184,12 +180,8 @@ class LikelihoodReconstructor:
             all_ids = np.concatenate(score_ids)
             all_scores = np.concatenate(score_values)
             counts = np.bincount(all_ids, minlength=self.geometry.n_voxels)
-            sums = np.bincount(
-                all_ids, weights=all_scores, minlength=self.geometry.n_voxels
-            )
-            statistic = np.divide(
-                sums, counts, out=np.zeros_like(lambda_ref), where=counts > 0
-            )
+            sums = np.bincount(all_ids, weights=all_scores, minlength=self.geometry.n_voxels)
+            statistic = np.divide(sums, counts, out=np.zeros_like(lambda_ref), where=counts > 0)
             if self.update_statistic == "median":
                 order = np.argsort(all_ids, kind="stable")
                 sorted_ids = all_ids[order]
@@ -197,11 +189,9 @@ class LikelihoodReconstructor:
                 unique, starts_at, group_counts = np.unique(
                     sorted_ids, return_index=True, return_counts=True
                 )
-                for voxel, first, count in zip(unique, starts_at, group_counts):
+                for voxel, first, count in zip(unique, starts_at, group_counts, strict=True):
                     if count >= 3:
-                        statistic[voxel] = np.median(
-                            sorted_scores[first : first + count]
-                        )
+                        statistic[voxel] = np.median(sorted_scores[first : first + count])
             updated = lambda_ref.copy()
             changed = counts > 0
             updated[changed] = 0.5 * statistic[changed]
@@ -221,12 +211,8 @@ class LikelihoodReconstructor:
             tracks, self.momentum_policy, self.average_momentum_mev
         )
         if self.mode == "full":
-            paths, lengths, occupancy, kinked = prepare_poca_paths(
-                tracks, self.geometry
-            )
-            rho, history, clipped = self._full_covariance_mlem(
-                tracks, momenta_mev, paths, lengths
-            )
+            paths, lengths, occupancy, kinked = prepare_poca_paths(tracks, self.geometry)
+            rho, history, clipped = self._full_covariance_mlem(tracks, momenta_mev, paths, lengths)
             path_model = "physical entry-PoCA-exit; straight fallback"
         else:
             paths, lengths, occupancy = prepare_paths(tracks, self.geometry)
@@ -246,7 +232,9 @@ class LikelihoodReconstructor:
             valid_mask=valid,
             geometry=self.geometry,
             metadata={
-                "algorithm": "muonTruck covariance MLEM" if self.mode == "full" else "angular-path MLEM",
+                "algorithm": "muonTruck covariance MLEM"
+                if self.mode == "full"
+                else "angular-path MLEM",
                 "mode": self.mode,
                 "raw_estimator_unit": "cm^-1",
                 "iterations": self.iterations,

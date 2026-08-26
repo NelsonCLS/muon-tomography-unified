@@ -10,7 +10,6 @@ from scipy.ndimage import binary_erosion
 from .compare import compare_to_truth
 from .types import ReconstructionResult, TruthVolume
 
-
 CUBE_OFFSETS = np.asarray(
     [
         [-1, -1, -1],
@@ -27,12 +26,18 @@ CUBE_OFFSETS = np.asarray(
 
 CUBE_TRIANGLES = np.asarray(
     [
-        [0, 1, 2], [0, 2, 3],
-        [4, 6, 5], [4, 7, 6],
-        [0, 4, 5], [0, 5, 1],
-        [1, 5, 6], [1, 6, 2],
-        [2, 6, 7], [2, 7, 3],
-        [3, 7, 4], [3, 4, 0],
+        [0, 1, 2],
+        [0, 2, 3],
+        [4, 6, 5],
+        [4, 7, 6],
+        [0, 4, 5],
+        [0, 5, 1],
+        [1, 5, 6],
+        [1, 6, 2],
+        [2, 6, 7],
+        [2, 7, 3],
+        [3, 7, 4],
+        [3, 4, 0],
     ],
     dtype=np.int64,
 )
@@ -76,9 +81,7 @@ def _select_voxels(
     candidate_count = len(indices)
     if candidate_count > max_cubes:
         chosen = np.sort(
-            np.random.default_rng(seed).choice(
-                candidate_count, size=max_cubes, replace=False
-            )
+            np.random.default_rng(seed).choice(candidate_count, size=max_cubes, replace=False)
         )
         indices = indices[chosen]
         selected_values = selected_values[chosen]
@@ -100,9 +103,7 @@ def _density_opacity_groups(
     groups = []
     for bin_id in np.unique(bin_ids):
         selected = bin_ids == bin_id
-        group_opacity = max(
-            float(maximum_opacity * np.mean(normalized[selected])), 1.0e-4
-        )
+        group_opacity = max(float(maximum_opacity * np.mean(normalized[selected])), 1.0e-4)
         groups.append((selected, group_opacity))
     return groups
 
@@ -156,9 +157,18 @@ def _region_edges(
         ]
     )
     edges = (
-        (0, 1), (1, 2), (2, 3), (3, 0),
-        (4, 5), (5, 6), (6, 7), (7, 4),
-        (0, 4), (1, 5), (2, 6), (3, 7),
+        (0, 1),
+        (1, 2),
+        (2, 3),
+        (3, 0),
+        (4, 5),
+        (5, 6),
+        (6, 7),
+        (7, 4),
+        (0, 4),
+        (1, 5),
+        (2, 6),
+        (3, 7),
     )
     xyz: list[list[float | None]] = [[], [], []]
     for first, second in edges:
@@ -224,9 +234,13 @@ def plot_comparison_3d(
     figure = go.Figure(
         data=[
             go.Scatter3d(
-                x=edge_x, y=edge_y, z=edge_z, mode="lines",
+                x=edge_x,
+                y=edge_y,
+                z=edge_z,
+                mode="lines",
                 line={"color": "rgba(120,120,120,0.75)", "width": 4},
-                hoverinfo="skip", name="64^3 reconstruction boundary",
+                hoverinfo="skip",
+                name="64^3 reconstruction boundary",
                 showlegend=False,
             )
         ]
@@ -251,9 +265,7 @@ def plot_comparison_3d(
             separate_regions=discrete,
             seed=panel_index,
         )
-        mse = 0.0 if metrics is None else float(
-            metrics["mse_full_grid_cm_inv_squared"]
-        )
+        mse = 0.0 if metrics is None else float(metrics["mse_full_grid_cm_inv_squared"])
         button_label = f"{label} ({len(indices):,} cubes)"
         button_labels.append(button_label)
         trace_indices = []
@@ -304,14 +316,10 @@ def plot_comparison_3d(
         panel_trace_indices.append(trace_indices)
         report_panels[label.lower()] = {
             "eligible_cubes": candidates,
-            "displayed_cubes": int(len(indices)),
+            "displayed_cubes": len(indices),
             "mse_full_grid_cm_inv_squared": mse,
-            "minimum_display_opacity": (
-                float(min(opacity_values)) if opacity_values else 0.0
-            ),
-            "maximum_display_opacity": (
-                float(max(opacity_values)) if opacity_values else 0.0
-            ),
+            "minimum_display_opacity": (float(min(opacity_values)) if opacity_values else 0.0),
+            "maximum_display_opacity": (float(max(opacity_values)) if opacity_values else 0.0),
         }
 
     buttons = []

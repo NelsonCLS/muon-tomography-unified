@@ -6,7 +6,6 @@ import pytest
 
 from muon_tomo.io.root import load_root_tracks
 
-
 ROOT_SAMPLE = Path(os.environ.get("GEANT4_ROOT_SAMPLE", "/nonexistent/sample.root"))
 
 

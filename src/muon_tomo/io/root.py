@@ -11,8 +11,13 @@ from ..geometry import GridGeometry
 from ..types import TrackTable
 
 BRANCHES = (
-    "eventNumber", "hitPositionX_truth", "hitPositionY_truth", "hitPositionZ_truth",
-    "hitMomentumX_truth", "hitMomentumY_truth", "hitMomentumZ_truth",
+    "eventNumber",
+    "hitPositionX_truth",
+    "hitPositionY_truth",
+    "hitPositionZ_truth",
+    "hitMomentumX_truth",
+    "hitMomentumY_truth",
+    "hitMomentumZ_truth",
 )
 
 
@@ -48,7 +53,6 @@ def load_root_tracks(
         import uproot
     except ImportError as exc:
         raise RuntimeError("ROOT support requires uproot") from exc
-    grid = geometry or GridGeometry()
     source = str(Path(path).resolve())
     with uproot.open(source) as root_file:
         tree = root_file[tree_name]
@@ -72,7 +76,7 @@ def load_root_tracks(
     d1s: list[np.ndarray] = []
     ps: list[float] = []
     ids: list[int] = []
-    for start, end in zip(starts, ends):
+    for start, end in zip(starts, ends, strict=True):
         hits = positions[start:end]
         upper = hits[hits[:, 2] > 0]
         lower = hits[hits[:, 2] < 0]
@@ -89,12 +93,21 @@ def load_root_tracks(
             continue
         # Match the frozen Mu-Net TFRecord ordering: lower detector point and
         # direction first, upper detector point and direction second.
-        p0s.append(first); d0s.append(lower_dir); p1s.append(second); d1s.append(upper_dir)
-        ps.append(momentum); ids.append(int(event[start]))
+        p0s.append(first)
+        d0s.append(lower_dir)
+        p1s.append(second)
+        d1s.append(upper_dir)
+        ps.append(momentum)
+        ids.append(int(event[start]))
 
     tracks = TrackTable(
-        np.asarray(p0s), np.asarray(d0s), np.asarray(p1s), np.asarray(d1s),
-        np.asarray(ps), np.asarray(ids), source,
+        np.asarray(p0s),
+        np.asarray(d0s),
+        np.asarray(p1s),
+        np.asarray(d1s),
+        np.asarray(ps),
+        np.asarray(ids),
+        source,
         {
             "format": "muontruck_root_hits",
             "tree": tree_name,
@@ -103,8 +116,8 @@ def load_root_tracks(
             "track_plane_lower_cm": track_plane_lower_cm,
             "track_plane_upper_cm": track_plane_upper_cm,
             "track_point_order": "lower_then_upper_matching_tfrecord",
-            "events_seen": int(len(starts)),
-            "events_reconstructed": int(len(ps)),
+            "events_seen": len(starts),
+            "events_reconstructed": len(ps),
         },
     )
     return tracks.subset(limit, seed)

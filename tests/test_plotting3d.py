@@ -37,9 +37,7 @@ def test_voxel_selection_is_thresholded_bounded_and_deterministic():
     volume = np.zeros((8, 8, 8), dtype=float)
     volume[1:7, 1:7, 1:7] = 0.5
 
-    first, values, candidates = _select_voxels(
-        volume, 0.1, 20, surface_only=True, seed=4
-    )
+    first, values, candidates = _select_voxels(volume, 0.1, 20, surface_only=True, seed=4)
     repeated, repeated_values, repeated_candidates = _select_voxels(
         volume, 0.1, 20, surface_only=True, seed=4
     )

@@ -46,8 +46,10 @@ def test_xyz_axes_increase_without_swap_or_reflection():
 def test_closest_approach_landmark_maps_to_expected_xyz_voxel():
     geometry = GridGeometry()
     landmark = np.asarray((10.0, -20.0, 5.0))
-    d0 = np.asarray((0.1, 0.05, 1.0)); d0 /= np.linalg.norm(d0)
-    d1 = np.asarray((-0.05, 0.1, 1.0)); d1 /= np.linalg.norm(d1)
+    d0 = np.asarray((0.1, 0.05, 1.0))
+    d0 /= np.linalg.norm(d0)
+    d1 = np.asarray((-0.05, 0.1, 1.0))
+    d1 /= np.linalg.norm(d1)
     point = closest_approach(landmark - 80.0 * d0, d0, landmark + 80.0 * d1, d1)
 
     assert np.allclose(point, landmark, atol=1e-10)

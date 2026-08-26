@@ -7,7 +7,9 @@ import numpy as np
 from .types import ReconstructionResult, TruthVolume
 
 
-def compare_to_truth(result: ReconstructionResult, truth: TruthVolume) -> dict[str, float | int | str]:
+def compare_to_truth(
+    result: ReconstructionResult, truth: TruthVolume
+) -> dict[str, float | int | str]:
     if result.geometry != truth.geometry:
         raise ValueError("result and truth geometries differ")
     full_prediction = result.inverse_radiation_length_cm_inv.astype(float)

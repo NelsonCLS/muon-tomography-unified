@@ -4,4 +4,4 @@ from .likelihood import LikelihoodReconstructor
 from .munet import MuNetReconstructor
 from .poca import PoCAReconstructor
 
-__all__ = ["MuNetReconstructor", "PoCAReconstructor", "LikelihoodReconstructor"]
+__all__ = ["LikelihoodReconstructor", "MuNetReconstructor", "PoCAReconstructor"]

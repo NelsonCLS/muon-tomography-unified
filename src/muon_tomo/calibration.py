@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 import json
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 from scipy.ndimage import binary_erosion
@@ -112,7 +112,9 @@ def fit_calibration(
     ), rows
 
 
-def apply_calibration(result: ReconstructionResult, model: CalibrationModel) -> ReconstructionResult:
+def apply_calibration(
+    result: ReconstructionResult, model: CalibrationModel
+) -> ReconstructionResult:
     if result.method != model.method:
         raise ValueError(f"calibration is for {model.method}, result is {result.method}")
     calibrated = model.apply(result.raw_estimator)
@@ -132,7 +134,9 @@ def apply_calibration(result: ReconstructionResult, model: CalibrationModel) -> 
 def save_calibrations(path: str | Path, models: Iterable[CalibrationModel], report: dict) -> Path:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps({"models": [asdict(x) for x in models], "report": report}, indent=2) + "\n")
+    target.write_text(
+        json.dumps({"models": [asdict(x) for x in models], "report": report}, indent=2) + "\n"
+    )
     return target
 
 

@@ -7,9 +7,12 @@ def test_empty_voxel_uses_six_face_neighbors_without_changing_measured_voxels():
     volume = np.zeros((5, 5, 5), dtype=np.float32)
     center = (2, 2, 2)
     neighbors = [
-        (1, 2, 2), (3, 2, 2),
-        (2, 1, 2), (2, 3, 2),
-        (2, 2, 1), (2, 2, 3),
+        (1, 2, 2),
+        (3, 2, 2),
+        (2, 1, 2),
+        (2, 3, 2),
+        (2, 2, 1),
+        (2, 2, 3),
     ]
     for value, index in enumerate(neighbors, start=1):
         volume[index] = value

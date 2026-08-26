@@ -40,8 +40,10 @@ class PoCAReconstructor:
         accepted = 0
         for i in range(len(tracks)):
             point = closest_approach(
-                tracks.entry_position_cm[i], tracks.entry_direction[i],
-                tracks.exit_position_cm[i], tracks.exit_direction[i],
+                tracks.entry_position_cm[i],
+                tracks.entry_direction[i],
+                tracks.exit_position_cm[i],
+                tracks.exit_direction[i],
             )
             if point is None or not bool(geometry.contains(point)):
                 continue
@@ -52,9 +54,13 @@ class PoCAReconstructor:
                 continue
             poca_index = geometry.point_to_index(point)
             match = np.flatnonzero(np.all(indices == poca_index, axis=1))
-            path_cm = float(lengths[match[0]]) if len(match) else float(np.mean(geometry.voxel_size_cm))
+            path_cm = (
+                float(lengths[match[0]]) if len(match) else float(np.mean(geometry.voxel_size_cm))
+            )
             theta2 = 0.5 * (dtx[i] ** 2 + dty[i] ** 2)
-            rho_event = theta2 * (momenta_mev[i] / self.highland_constant_mev) ** 2 / max(path_cm, 1e-9)
+            rho_event = (
+                theta2 * (momenta_mev[i] / self.highland_constant_mev) ** 2 / max(path_cm, 1e-9)
+            )
             flat = int(geometry.flat_index(poca_index[None, :])[0])
             sums[flat] += rho_event
             sums_sq[flat] += rho_event * rho_event
@@ -62,7 +68,9 @@ class PoCAReconstructor:
             accepted += 1
 
         raw = np.divide(sums, counts, out=np.zeros_like(sums), where=counts > 0)
-        variance = np.divide(sums_sq, counts, out=np.zeros_like(sums_sq), where=counts > 0) - raw * raw
+        variance = (
+            np.divide(sums_sq, counts, out=np.zeros_like(sums_sq), where=counts > 0) - raw * raw
+        )
         uncertainty = np.sqrt(np.maximum(variance, 0.0) / np.maximum(counts, 1))
         raw = raw.reshape(geometry.shape)
         count_volume = counts.reshape(geometry.shape)

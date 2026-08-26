@@ -5,8 +5,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import numpy as np
 import yaml
@@ -21,7 +21,7 @@ from .reconstruction import LikelihoodReconstructor, MuNetReconstructor, PoCARec
 from .stability import write_errored_tfrecord
 from .types import ReconstructionResult, TruthVolume
 
-DEFAULT_CONFIG = Path(__file__).parents[2] / "configs" / "default.yaml"
+DEFAULT_CONFIG = Path(__file__).with_name("configs") / "default.yaml"
 
 
 def _config(path: str | None) -> dict:
@@ -34,8 +34,10 @@ def _config(path: str | None) -> dict:
 def _geometry(cfg: dict) -> GridGeometry:
     values = cfg["geometry"]
     return GridGeometry(
-        tuple(values["lower_cm"]), tuple(values["upper_cm"]),
-        tuple(values["shape"]), values["axis_order"],
+        tuple(values["lower_cm"]),
+        tuple(values["upper_cm"]),
+        tuple(values["shape"]),
+        values["axis_order"],
     )
 
 
@@ -107,8 +109,10 @@ def _load_truth(path: str | Path) -> TruthVolume:
         metadata = json.loads(str(data["metadata_json"]))
         gm = metadata["geometry"]
         geometry = GridGeometry(
-            tuple(gm["lower_cm"]), tuple(gm["upper_cm"]),
-            tuple(gm["shape"]), gm["axis_order"],
+            tuple(gm["lower_cm"]),
+            tuple(gm["upper_cm"]),
+            tuple(gm["shape"]),
+            gm["axis_order"],
         )
         return TruthVolume(
             data["material_labels"], data["inverse_radiation_length_cm_inv"], geometry, metadata
@@ -137,9 +141,7 @@ def command_truth(args: argparse.Namespace) -> None:
     geometry = _geometry(_config(args.config))
     if _format(args.input, args.format) != "tfrecord":
         raise ValueError("material truth is currently stored only by the x/y TFRecord format")
-    _, truth = load_tfrecord_record(
-        args.input, args.record_index, geometry=geometry, limit=0
-    )
+    _, truth = load_tfrecord_record(args.input, args.record_index, geometry=geometry, limit=0)
     print(_save_truth(truth, args.output))
 
 
@@ -164,9 +166,8 @@ def command_reconstruct(args: argparse.Namespace) -> None:
         tracks = tracks.take_first(chunks * dosage)
     track_fingerprint = _track_fingerprint(tracks)
     calibration = load_calibrations(args.calibration) if args.calibration else {}
-    momentum_policy = (
-        args.classical_momentum_policy
-        or cfg["physics"].get("classical_momentum_policy", "mean")
+    momentum_policy = args.classical_momentum_policy or cfg["physics"].get(
+        "classical_momentum_policy", "mean"
     )
     average_momentum_mev = (
         args.average_momentum_mev
@@ -253,9 +254,7 @@ def command_calibrate(args: argparse.Namespace) -> None:
     all_records = sorted(set(fit_records + args.validate_records))
     truths = {}
     for record in all_records:
-        _, truths[record] = load_tfrecord_record(
-            args.dataset, record, geometry=geometry, limit=0
-        )
+        _, truths[record] = load_tfrecord_record(args.dataset, record, geometry=geometry, limit=0)
     loaded = {
         (record, method): ReconstructionResult.load(
             Path(args.results_dir) / f"record_{record}_{method}.npz"
@@ -274,9 +273,7 @@ def command_calibrate(args: argparse.Namespace) -> None:
         for method in ("poca", "likelihood")
     }
     if policies != {"mean"} or None in assumed_momenta or len(assumed_momenta) != 1:
-        raise ValueError(
-            "calibration inputs must share one fixed mean-momentum policy and value"
-        )
+        raise ValueError("calibration inputs must share one fixed mean-momentum policy and value")
     likelihood_modes = {
         loaded[(record, "likelihood")].metadata.get("mode") for record in all_records
     }
@@ -309,9 +306,7 @@ def command_calibrate(args: argparse.Namespace) -> None:
         for record in args.validate_records:
             original = loaded[(record, method)]
             calibrated = apply_calibration(original, model)
-            validations.append(
-                {"record": record, **compare_to_truth(calibrated, truths[record])}
-            )
+            validations.append({"record": record, **compare_to_truth(calibrated, truths[record])})
         report["methods"][method] = {
             "slope": model.slope,
             "intercept": model.intercept,
@@ -325,9 +320,7 @@ def command_calibrate(args: argparse.Namespace) -> None:
 
 def command_compare(args: argparse.Namespace) -> None:
     truth = _load_truth(args.truth)
-    rows = [
-        compare_to_truth(ReconstructionResult.load(path), truth) for path in args.results
-    ]
+    rows = [compare_to_truth(ReconstructionResult.load(path), truth) for path in args.results]
     _write_json(rows, args.output)
 
 
@@ -369,7 +362,9 @@ def command_stability(args: argparse.Namespace) -> None:
         tf.random.set_seed(args.munet_seed)
         reconstructors = [
             MuNetReconstructor(
-                geometry, dosage=dosage, max_chunks=count // dosage,
+                geometry,
+                dosage=dosage,
+                max_chunks=count // dosage,
                 position_scale_cm=float(cfg["munet"]["position_scale_cm"]),
                 position_offset=float(cfg["munet"]["position_offset"]),
             ),
@@ -377,32 +372,42 @@ def command_stability(args: argparse.Namespace) -> None:
                 geometry,
                 highland_constant_mev=float(cfg["physics"]["highland_constant_mev"]),
                 minimum_coverage=int(cfg["poca"]["minimum_coverage"]),
-                momentum_policy="mean", average_momentum_mev=average_momentum_mev,
+                momentum_policy="mean",
+                average_momentum_mev=average_momentum_mev,
             ),
             LikelihoodReconstructor(
-                geometry, iterations=args.iterations,
+                geometry,
+                iterations=args.iterations,
                 reference_momentum_mev=float(cfg["physics"]["reference_momentum_mev"]),
                 highland_constant_mev=float(cfg["physics"]["highland_constant_mev"]),
-                initial_inverse_radiation_length_cm_inv=float(cfg["likelihood"]["initial_inverse_radiation_length_cm_inv"]),
+                initial_inverse_radiation_length_cm_inv=float(
+                    cfg["likelihood"]["initial_inverse_radiation_length_cm_inv"]
+                ),
                 minimum_coverage=int(cfg["likelihood"]["minimum_coverage"]),
-                epsilon=float(cfg["likelihood"]["epsilon"]), mode="full",
-                momentum_policy="mean", average_momentum_mev=average_momentum_mev,
+                epsilon=float(cfg["likelihood"]["epsilon"]),
+                mode="full",
+                momentum_policy="mean",
+                average_momentum_mev=average_momentum_mev,
                 update_statistic=cfg["likelihood"].get("update_statistic", "median"),
                 angular_resolution_rad=float(cfg["likelihood"]["angular_resolution_rad"]),
                 position_resolution_cm=float(cfg["likelihood"]["position_resolution_cm"]),
-                maximum_inverse_radiation_length_cm_inv=float(cfg["likelihood"]["maximum_inverse_radiation_length_cm_inv"]),
+                maximum_inverse_radiation_length_cm_inv=float(
+                    cfg["likelihood"]["maximum_inverse_radiation_length_cm_inv"]
+                ),
             ),
         ]
         fingerprint = _track_fingerprint(tracks)
         rows = {}
         for reconstructor in reconstructors:
             result = reconstructor.reconstruct(tracks)
-            result.metadata.update({
-                "stability_scenario": label,
-                "track_count": len(tracks),
-                "track_fingerprint_sha256": fingerprint,
-                "error_dataset": error_report if label == "errored" else None,
-            })
+            result.metadata.update(
+                {
+                    "stability_scenario": label,
+                    "track_count": len(tracks),
+                    "track_fingerprint_sha256": fingerprint,
+                    "error_dataset": error_report if label == "errored" else None,
+                }
+            )
             if result.method in calibration:
                 result = apply_calibration(result, calibration[result.method])
             result.save(output / f"record_{args.record_index}_{label}_{result.method}.npz")
@@ -418,21 +423,27 @@ def command_stability(args: argparse.Namespace) -> None:
         perturbed = errored[method]
         clean_mse = float(baseline["mse_full_grid_cm_inv_squared"])
         errored_mse = float(perturbed["mse_full_grid_cm_inv_squared"])
-        comparison.append({
-            "method": method,
-            "clean_mse_full_grid_cm_inv_squared": clean_mse,
-            "errored_mse_full_grid_cm_inv_squared": errored_mse,
-            "delta_mse_cm_inv_squared": errored_mse - clean_mse,
-            "mse_ratio_errored_to_clean": errored_mse / clean_mse if clean_mse else None,
-        })
-    _write_json({
-        "status": "success", "tracks_per_scenario": count,
-        "calibration": str(Path(args.calibration).resolve()) if args.calibration else None,
-        "clean_track_fingerprint_sha256": clean_fingerprint,
-        "errored_track_fingerprint_sha256": errored_fingerprint,
-        "error_dataset": error_report,
-        "comparison": comparison,
-    }, output / "stability_mse_comparison.json")
+        comparison.append(
+            {
+                "method": method,
+                "clean_mse_full_grid_cm_inv_squared": clean_mse,
+                "errored_mse_full_grid_cm_inv_squared": errored_mse,
+                "delta_mse_cm_inv_squared": errored_mse - clean_mse,
+                "mse_ratio_errored_to_clean": errored_mse / clean_mse if clean_mse else None,
+            }
+        )
+    _write_json(
+        {
+            "status": "success",
+            "tracks_per_scenario": count,
+            "calibration": str(Path(args.calibration).resolve()) if args.calibration else None,
+            "clean_track_fingerprint_sha256": clean_fingerprint,
+            "errored_track_fingerprint_sha256": errored_fingerprint,
+            "error_dataset": error_report,
+            "comparison": comparison,
+        },
+        output / "stability_mse_comparison.json",
+    )
     print(output / "stability_mse_comparison.json")
 
 
@@ -498,9 +509,7 @@ def command_validate(args: argparse.Namespace) -> None:
     classical = [by_method["poca"], by_method["likelihood"]]
     policies = {result.metadata.get("momentum_policy") for result in classical}
     if policies != {"mean"}:
-        raise ValueError(
-            "PoCA and likelihood must both declare the shared mean-momentum policy"
-        )
+        raise ValueError("PoCA and likelihood must both declare the shared mean-momentum policy")
     assumed = [result.metadata.get("assumed_momentum_mev") for result in classical]
     if None in assumed or not np.isclose(float(assumed[0]), float(assumed[1])):
         raise ValueError("PoCA and likelihood do not use the same assumed momentum")

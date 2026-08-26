@@ -29,9 +29,7 @@ def test_full_depth_projection_averages_all_64_layers():
     volume = np.zeros((64, 64, 64), dtype=float)
     for z in range(64):
         volume[:, :, z] = z
-    projection, first, last = _z_projection(
-        volume, center_index=3, slab_layers=5, full_depth=True
-    )
+    projection, first, last = _z_projection(volume, center_index=3, slab_layers=5, full_depth=True)
     assert projection.shape == (64, 64)
     assert (first, last) == (0, 63)
     np.testing.assert_allclose(projection, 31.5)
@@ -47,7 +45,10 @@ def test_full_depth_projection_supports_x_y_and_z():
     }
     for axis in ("x", "y", "z"):
         projection, first, last = _axis_projection(
-            volume, center_index=32, slab_layers=7, full_depth=True,
+            volume,
+            center_index=32,
+            slab_layers=7,
+            full_depth=True,
             projection_axis=axis,
         )
         assert projection.shape == (64, 64)

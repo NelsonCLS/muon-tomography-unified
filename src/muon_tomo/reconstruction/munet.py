@@ -27,7 +27,13 @@ class MuNetReconstructor:
         if dosage not in {512, 1024}:
             raise ValueError("frozen Mu-Net supports dosage 512 or 1024")
         self.dosage = dosage
-        default = Path(__file__).parents[1] / "_vendor" / "munet" / "weights" / f"model_{dosage}.weights.h5"
+        default = (
+            Path(__file__).parents[1]
+            / "_vendor"
+            / "munet"
+            / "weights"
+            / f"model_{dosage}.weights.h5"
+        )
         self.weights_path = Path(weights_path) if weights_path else default
         self.position_scale_cm = float(position_scale_cm)
         self.position_offset = float(position_offset)
@@ -46,9 +52,11 @@ class MuNetReconstructor:
         outgoing = tracks.exit_direction.astype(np.float32)
         return np.concatenate(
             [
-                tracks.entry_position_cm.astype(np.float32) / self.position_scale_cm + self.position_offset,
+                tracks.entry_position_cm.astype(np.float32) / self.position_scale_cm
+                + self.position_offset,
                 incoming,
-                tracks.exit_position_cm.astype(np.float32) / self.position_scale_cm + self.position_offset,
+                tracks.exit_position_cm.astype(np.float32) / self.position_scale_cm
+                + self.position_offset,
                 outgoing,
                 np.zeros((len(tracks), 1), dtype=np.float32),
                 np.linalg.norm(outgoing - incoming, axis=1, keepdims=True).astype(np.float32),
@@ -59,6 +67,7 @@ class MuNetReconstructor:
     def reconstruct(self, tracks: TrackTable) -> ReconstructionResult:
         try:
             import tensorflow as tf
+
             from muon_tomo._vendor.munet.models.agg_3d import Agg3D
         except ImportError as exc:
             raise RuntimeError("Mu-Net inference requires the 'munet' extra (TensorFlow)") from exc
@@ -84,9 +93,13 @@ class MuNetReconstructor:
         model.load_weights(str(self.weights_path))
         total = np.zeros(self.geometry.shape, dtype=np.float64)
         for chunk in features:
-            prediction = model(tf.convert_to_tensor(chunk[None, ...]), training=False).numpy()[0, ..., 0]
+            prediction = model(tf.convert_to_tensor(chunk[None, ...]), training=False).numpy()[
+                0, ..., 0
+            ]
             if prediction.shape != self.geometry.shape:
-                raise ValueError(f"Mu-Net returned {prediction.shape}, expected {self.geometry.shape}")
+                raise ValueError(
+                    f"Mu-Net returned {prediction.shape}, expected {self.geometry.shape}"
+                )
             total += prediction
         raw = (total / chunks).astype(np.float32)
         used = tracks.take_first(chunks * self.dosage)

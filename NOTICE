@@ -1,14 +1,50 @@
 Muon Tomography Unified
 
-This repository contains new integration and calibration code and adapted code
-from Muon-Tomography-AI, Copyright 2023 Lim Li Xin Jed & Qiu Ziming, licensed
-under Apache License 2.0.
+Except for the third-party components identified below, this repository
+contains original integration, packaging, calibration, validation, and
+visualization code made available under Apache License 2.0.
 
-The PoCA and likelihood implementations are derived from the local muonTruck
-research code at source revision 8393853a47e8654552a62d1886fb6766d637782f,
-with local uncommitted changes present at import time. No license file was found
-in that source repository. Redistribution outside the owner's environment
-therefore requires the owner to confirm the applicable license.
+MuNet
+-----
 
-All copied or adapted files are changed to integrate the methods behind a
-shared data model, fixed 64^3 geometry, explicit units, and one output schema.
+The architecture code and frozen weights under
+`src/muon_tomo/_vendor/munet/` are adapted from Muon-Tomography-AI, Copyright
+2023 Lim Li Xin Jed and Qiu Ziming, licensed under Apache License 2.0:
+
+https://github.com/jedlimlx/Muon-Tomography-AI
+
+The copied upstream licence is retained in
+`third_party/Muon-Tomography-AI-LICENSE`, and weight checksums are recorded in
+`third_party/MUNET_WEIGHTS.sha256`.
+
+Packaging changes use relative imports. The `Agg2D` constructor guard was also
+corrected to compare the scattered feature count with the final MLP width; the
+upstream tuple-form assertion was always true. This validation-only correction
+does not alter inference for the packaged model configurations.
+
+muonTruck
+---------
+
+The ROOT input adapter and the PoCA and likelihood/MLEM implementations are
+derived from the local muonTruck research code at source revision
+8393853a47e8654552a62d1886fb6766d637782f, with local uncommitted changes
+present at import time. The upstream repository supplied by the project owner
+is:
+
+https://github.com/kfung010/muonTruck
+
+The linked TFRecord generator is:
+
+https://github.com/kfung010/muonTruck/blob/main/recon/generate_tfrecord.py
+
+No licence file was found in the source used for the adaptation. The top-level
+Apache licence does not grant rights to muonTruck-derived material.
+Redistribution outside the owner's environment requires confirmation of the
+applicable licence. The affected unified paths are:
+
+- `src/muon_tomo/io/root.py`
+- `src/muon_tomo/reconstruction/poca.py`
+- `src/muon_tomo/reconstruction/likelihood.py`
+
+All adapted components were changed to integrate the methods behind a shared
+data model, fixed 64^3 geometry, explicit units, and one output schema.

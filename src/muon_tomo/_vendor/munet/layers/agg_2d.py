@@ -67,8 +67,12 @@ class Agg2D(Model):
             *args, **kwargs):
         super(Agg2D, self).__init__(*args, **kwargs)
 
-        assert (len(scatter_filters) * 2 + sum([sum(x) for x in scatter_filters]) == mlp_units,
-                f'{mlp_units} features cannot be scattered into the filters {scatter_filters}')
+        assert len(scatter_filters) * 2 + sum(
+            sum(x) for x in scatter_filters
+        ) == mlp_units[-1], (
+            f'{mlp_units[-1]} features cannot be scattered into the filters '
+            f'{scatter_filters}'
+        )
 
         self.resolution = resolution
         self.scatter_filters = scatter_filters

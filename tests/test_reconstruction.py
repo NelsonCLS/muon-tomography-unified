@@ -22,18 +22,18 @@ def test_poca_contract(synthetic_tracks):
 
 
 def test_angular_likelihood_contract(synthetic_tracks):
-    result = LikelihoodReconstructor(
-        GridGeometry(), iterations=2, mode="angular"
-    ).reconstruct(synthetic_tracks)
+    result = LikelihoodReconstructor(GridGeometry(), iterations=2, mode="angular").reconstruct(
+        synthetic_tracks
+    )
     _assert_contract(result)
     assert result.method == "likelihood"
     assert len(result.metadata["convergence_history"]) == 2
 
 
 def test_full_covariance_likelihood_contract(synthetic_tracks):
-    result = LikelihoodReconstructor(
-        GridGeometry(), iterations=1, mode="full"
-    ).reconstruct(synthetic_tracks.subset(16))
+    result = LikelihoodReconstructor(GridGeometry(), iterations=1, mode="full").reconstruct(
+        synthetic_tracks.subset(16)
+    )
     _assert_contract(result)
     assert result.metadata["mode"] == "full"
 

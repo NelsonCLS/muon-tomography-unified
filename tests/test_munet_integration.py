@@ -8,7 +8,6 @@ import pytest
 from muon_tomo.io.tfrecord import load_tfrecord_record
 from muon_tomo.reconstruction import MuNetReconstructor
 
-
 FUNNY = Path(os.environ.get("FUNNY_TFRECORD", "/nonexistent/funny.tfrecord"))
 
 
@@ -23,8 +22,14 @@ def _sha256(path: Path) -> str:
 def test_frozen_weight_hashes():
     root = Path(__file__).parents[1]
     weights = root / "src" / "muon_tomo" / "_vendor" / "munet" / "weights"
-    assert _sha256(weights / "model_512.weights.h5") == "6fc8764ddb899c969329f5c44f649da8872fc9dd669a8a5108485e7954ce67ec"
-    assert _sha256(weights / "model_1024.weights.h5") == "d8383322563156697d93dacf1ffaa5caf0588a6c69096462908d9a6aba6e28d5"
+    assert (
+        _sha256(weights / "model_512.weights.h5")
+        == "6fc8764ddb899c969329f5c44f649da8872fc9dd669a8a5108485e7954ce67ec"
+    )
+    assert (
+        _sha256(weights / "model_1024.weights.h5")
+        == "d8383322563156697d93dacf1ffaa5caf0588a6c69096462908d9a6aba6e28d5"
+    )
 
 
 @pytest.mark.skipif(not FUNNY.is_file(), reason="set FUNNY_TFRECORD for Mu-Net integration")

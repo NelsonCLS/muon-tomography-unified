@@ -85,11 +85,15 @@ def inspect_tfrecord(path: str | Path) -> dict[str, object]:
         records.append(
             {
                 "index": i,
-                "tracks": int(len(x)),
+                "tracks": len(x),
                 "track_shape": list(x.shape),
                 "truth_shape": list(y.shape),
-                "material_voxels": {str(int(k)): int(v) for k, v in zip(labels, counts)},
-                "momentum_mev_percentiles": np.percentile(np.linalg.norm(x[:, 3:6], axis=1), [0, 1, 50, 99, 100]).tolist(),
+                "material_voxels": {
+                    str(int(k)): int(v) for k, v in zip(labels, counts, strict=True)
+                },
+                "momentum_mev_percentiles": np.percentile(
+                    np.linalg.norm(x[:, 3:6], axis=1), [0, 1, 50, 99, 100]
+                ).tolist(),
             }
         )
     return {"path": str(Path(path).resolve()), "compression": "GZIP", "records": records}

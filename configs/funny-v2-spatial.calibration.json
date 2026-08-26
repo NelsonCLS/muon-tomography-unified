@@ -23,7 +23,7 @@
     }
   ],
   "report": {
-    "dataset": "/Users/nelsonchan/Muon_Tomo/Muon-Tomography-AI/dataset/voxels_prediction_funny.tfrecord",
+    "dataset": "voxels_prediction_funny.tfrecord",
     "fit_records": [
       0
     ],

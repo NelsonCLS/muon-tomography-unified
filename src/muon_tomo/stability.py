@@ -6,7 +6,6 @@ from pathlib import Path
 
 import numpy as np
 
-
 POSITION_SIGMA_CM = 0.29
 ANGULAR_SIGMA_DEG = 0.5
 
@@ -79,9 +78,7 @@ def perturb_muon_columns(
         "entry_momentum_magnitudes_unchanged": bool(
             np.allclose(entry_magnitude, np.linalg.norm(result[:, 3:6], axis=1))
         ),
-        "exit_directions_unit": bool(
-            np.allclose(np.linalg.norm(result[:, 9:12], axis=1), 1.0)
-        ),
+        "exit_directions_unit": bool(np.allclose(np.linalg.norm(result[:, 9:12], axis=1), 1.0)),
     }
     return result, report
 

@@ -75,7 +75,9 @@ class GridGeometry:
         idx = np.asarray(index_xyz, dtype=np.int64)
         return np.ravel_multi_index(idx.T, self.shape)
 
-    def trace_segment(self, start_cm: np.ndarray, end_cm: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def trace_segment(
+        self, start_cm: np.ndarray, end_cm: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Return ordered xyz voxel indices and exact chord lengths for an AABB-clipped segment."""
         start = np.asarray(start_cm, dtype=np.float64)
         end = np.asarray(end_cm, dtype=np.float64)

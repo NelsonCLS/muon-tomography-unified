@@ -1,342 +1,202 @@
 # Muon Tomography Unified
 
-A standalone, inference-focused repository that runs three muon-scattering
-tomography methods through one data model, one physical target, and one fixed
-voxel geometry:
+Muon tomography uses the deflection of naturally occurring cosmic muons to
+infer the distribution of material inside an object. This repository provides
+one reproducible framework for running and comparing three reconstruction
+methods on the same tracks, geometry, physical target, and evaluation metrics:
 
-- frozen **Mu-Net**
-- fixed-average-momentum **PoCA**
-- **likelihood/MLEM**, including the muonTruck 2×2 covariance update
+- **MuNet** — frozen neural-network inference;
+- **PoCA** — point-of-closest-approach reconstruction;
+- **Likelihood / MLEM** — iterative maximum-likelihood reconstruction.
 
-The primary output of every method and the simulation truth is
+The project is inference-focused. It does not train or fine-tune MuNet, and it
+does not modify the source `Muon-Tomography-AI` repository, the source
+`muonTruck` repository, or the input datasets.
+
+## What this project provides
+
+The command-line workflow can:
+
+- read TensorFlow TFRecord samples and Geant4 ROOT hit data;
+- convert both input types to one common track-table representation;
+- reconstruct a common `64 × 64 × 64` volume with MuNet, PoCA, and MLEM;
+- express prediction and simulation truth in inverse radiation length,
+  \(1/X_0\), in `cm⁻¹`;
+- calibrate method outputs to the common target;
+- compare truth and predictions using full-volume metrics;
+- create top, side, and full-depth 2D projections;
+- create a self-contained, interactive Plotly 3D voxel viewer;
+- run paired clean-versus-errored detector-stability tests.
+
+The central goal is a fair comparison: every method uses the same selected
+tracks and the same reconstruction geometry, while method-specific outputs are
+stored alongside their coverage and metadata.
+
+## Reconstruction pipeline
+
+```text
+TFRecord or Geant4 ROOT input
+            │
+            ▼
+Common TrackTable + truth volume
+            │
+     ┌──────┼──────┐
+     ▼      ▼      ▼
+   MuNet   PoCA   Likelihood/MLEM
+     │      │      │
+     └──────┼──────┘
+            ▼
+Calibration, validation, full-grid metrics,
+2D projections, and interactive 3D viewer
+```
+
+## Common geometry and physical target
+
+All reconstructions use one mandatory geometry:
+
+| Property | Value |
+|---|---|
+| Array convention | `volume[x, y, z]` |
+| Grid shape | `64 × 64 × 64` |
+| Axis order | `xyz` |
+| Lower bound | `(-50, -50, -50)` cm |
+| Upper bound | `(50, 50, 50)` cm |
+| Voxel size | `(1.5625, 1.5625, 1.5625)` cm |
+| Detector reference planes | `z = -100 cm` and `z = +100 cm` |
+
+The primary quantity for both truth and reconstruction is
 
 \[
 \rho_X = \frac{1}{X_0}\quad[\mathrm{cm}^{-1}],
 \]
 
-where \(X_0\) is radiation length in centimetres.
+where \(X_0\) is material radiation length. Air is represented by zero.
 
-This repository was created additively. It does not modify the source
-`Muon-Tomography-AI` project, the source `muonTruck` project, their ROOT files,
-or their TFRecords.
+For the Funny sample, the truth materials of interest are:
 
-## Current validated status
+| Label | Material | \(1/X_0\) (`cm⁻¹`) |
+|---:|---|---:|
+| 0 | Air | 0.000000 |
+| 17 | Silver | 1.170569 |
+| 19 | Lead | 1.781790 |
+| 21 | Uranium | 3.158333 |
 
-The following workflows have been exercised successfully on the local samples:
+## Methods
 
-| Workflow | Status |
-|---|---:|
-| Parse both records of `voxels_prediction_funny.tfrecord` | passed |
-| Map truth labels to a finite `64×64×64` \(1/X_0\) volume | passed |
-| Parse the `cosmic_leadBox_200000.root` Geant4 hit tree | passed |
-| Frozen Mu-Net inference from TFRecord | passed |
-| PoCA reconstruction from TFRecord | passed |
-| Likelihood reconstruction from TFRecord | passed |
-| All three methods from Geant4 ROOT | passed |
-| Same shape, bounds, axes, and voxel size across methods | passed |
-| Fit on funny record 0 and evaluate on funny record 1 | passed |
-| PoCA/likelihood ignore every per-muon momentum magnitude | passed |
-| PoCA/likelihood use the same fixed 1743.46 MeV inverse-square effective prior | passed |
-| Reproducible 2×2 truth/MuNet/PoCA/likelihood slab plot | passed |
-| Rotatable truth/MuNet/PoCA/likelihood 3D voxel-cube viewer | passed |
-| Unit and synthetic reconstruction tests | passed |
+### MuNet
 
-The committed code does not train or fine-tune Mu-Net. The copied weights are
-loaded read-only at inference time.
+MuNet is run with copied, frozen weights. The supported workflow performs
+inference only; it does not call a training routine or write new weights.
 
-### Quantitative limitation of the 8,192-track comparison
+The adapter reproduces the verified 14-feature inference input, including the
+frozen model's zero momentum-estimate feature. MuNet processes complete dosage
+chunks and averages their predictions.
 
-After the audited full-covariance correction and funny-v4 calibration, record 0
-full-grid MSE is 0.1108 cm^-2 for Mu-Net, 0.2833 cm^-2 for PoCA, and
-0.4201 cm^-2 for likelihood. Held-out record 1 MSE is 0.1035, 0.2893, and
-0.3641 cm^-2, respectively. Likelihood path coverage is about 51%, but most
-covered 64³ voxels still receive too few rays for a continuous image. The
-historical sharp likelihood result used roughly 602,000 tracks and 10 cm
-voxels; it is not evidence that 8,192 tracks can resolve 1.5625 cm voxels.
+### PoCA
 
-A normalized Gaussian regularization sweep was rejected because every tested
-strength worsened held-out record-1 likelihood MSE. The default therefore
-preserves the physically corrected but visibly sparse reconstruction instead
-of smoothing record 0 into an unvalidated image.
+PoCA computes a point of closest approach between incoming and outgoing fitted
+track lines, then deposits a scattering estimate in the corresponding voxel.
+`occupancy_count` records the number of localized events and is not itself the
+physical reconstruction. Zero-occupancy voxels remain zero.
 
-## Hard geometry contract
+### Likelihood / MLEM
 
-Every method uses exactly the same `GridGeometry` object:
+The `full` likelihood mode implements the muonTruck-style `2 × 2` covariance
+update using projected angular and displacement observations. It stores a
+voxelized inverse-radiation-length estimate, coverage information, convergence
+history, and configuration metadata. The validated default uses ten iterations
+and a voxel-wise median update statistic.
 
-| Property | Default and required value |
+### Momentum information policy
+
+For the detector-realistic comparison, PoCA and likelihood do not use each
+event's simulated momentum magnitude. Both use the same fixed effective
+population momentum, recorded in output metadata. MuNet uses its verified
+zero-momentum feature. This policy is intended for a detector setup in which
+track positions and directions are measured but momentum is not.
+
+## Input formats
+
+### TensorFlow TFRecord
+
+The TFRecord adapter reads GZIP-compressed `tf.train.Example` records with:
+
+| Field | Content |
 |---|---|
-| Shape | `(64, 64, 64)` |
-| Axis order | `xyz` |
-| Array convention | `volume[x, y, z]` |
-| Lower bound | `(-50, -50, -50)` cm |
-| Upper bound | `(50, 50, 50)` cm |
-| Voxel size | `(1.5625, 1.5625, 1.5625)` cm |
+| `x` | Floating-point track table shaped `(N, >=12)` |
+| `y` | Integer material-label volume shaped `(64, 64, 64)` |
 
-These bounds are fixed by the frozen Mu-Net transform
-`normalized = position_cm / 100 + 0.5`: normalized coordinates 0 and 1 are
-exactly -50 and +50 cm. The constructor rejects any other shape, bounds, or axis
-order. Detector track reference planes remain at -100 and +100 cm. Classical
-tracks are extrapolated to the reconstruction faces at z=+50 and z=-50 cm
-before displacement or path calculations, so the observations and covariance
-weights use the same 100 cm baseline. Result validation rejects files that do
-not share identical geometry or the exact same selected-track fingerprint.
+The required track columns are:
 
-## Repository layout
+| Columns | Meaning | Stored unit |
+|---|---|---|
+| `0:3` | Entry position | mm |
+| `3:6` | Entry momentum vector | MeV |
+| `6:9` | Exit position | mm |
+| `9:12` | Exit direction | unit vector |
 
-```text
-muon-tomography-unified/
-├── calibration/                 generated/versioned calibration files
-├── configs/default.yaml         common geometry and method defaults
-├── src/muon_tomo/
-│   ├── _vendor/munet/           frozen inference architecture and weights
-│   ├── io/                      TFRecord and Geant4 ROOT adapters
-│   ├── reconstruction/          Mu-Net, PoCA, and likelihood
-│   ├── calibration.py           funny material-region calibration
-│   ├── cli.py                   unified command-line workflow
-│   ├── constants.py             material X0 table and conversions
-│   ├── geometry.py              mandatory 64³ geometry and ray tracing
-│   └── types.py                 shared tracks, truth, and result schema
-├── tests/                       unit, synthetic, and integration tests
-├── third_party/                 copied license information
-├── NOTICE                       source provenance
-└── pyproject.toml               package and dependency definition
-```
+Positions are converted to centimetres and directions are normalized in the
+common track table.
 
-Generated reconstructions are written below `outputs/`, which is ignored by
-Git. No command writes into either source repository or into the dataset
-directory.
+### Geant4 ROOT
+
+The ROOT adapter reads the `hits` tree and requires event number, hit position,
+and hit momentum branches. It fits upper and lower 3D track segments and
+intersects those lines with the fixed detector reference planes. The resulting
+records use the same common track-table representation as TFRecord input.
+
+A ROOT hit file does not itself contain the required voxel truth volume; a
+truth comparison therefore requires a separate truth NPZ with the identical
+geometry.
 
 ## Installation
 
-Python 3.11–3.13 is supported. From the repository root:
+Python 3.11–3.13 is supported.
 
 ```bash
+git clone <repository-url>
+cd muon-tomography-unified
+
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e '.[all]'
 ```
 
-The `all` extra installs TensorFlow, ROOT I/O, plotting, and testing packages.
-Smaller installations are possible:
-
-```bash
-python -m pip install -e .          # classical methods and ROOT I/O
-python -m pip install -e '.[munet]' # add TensorFlow/Mu-Net
-python -m pip install -e '.[test]'  # add tests
-```
-
-Confirm the command is installed:
+Confirm that the CLI is available:
 
 ```bash
 muon-tomo --help
 ```
 
-## Input data
-
-### TFRecord `x`/`y` format
-
-The adapter reads GZIP-compressed `tf.train.Example` records with two serialized
-tensors:
-
-- `x`: floating-point track table shaped `(N, >=12)`
-- `y`: integer material-label volume shaped exactly `(64,64,64)`
-
-The interpreted `x` columns are:
-
-| Columns | Meaning | Stored unit |
-|---|---|---|
-| `0:3` | entry position | mm |
-| `3:6` | entry momentum vector | MeV |
-| `6:9` | exit position | mm |
-| `9:12` | exit direction | unit vector |
-| `12:` | retained source extras, not required by the common table | source-defined |
-
-Positions are converted to centimetres and directions are normalized. Momentum
-is the norm of columns `3:6`.
-
-Inspect the funny sample without changing it:
+Smaller installations are also supported:
 
 ```bash
-FUNNY=/Users/nelsonchan/Muon_Tomo/Muon-Tomography-AI/dataset/voxels_prediction_funny.tfrecord
-muon-tomo inspect "$FUNNY"
+python -m pip install -e .          # classical methods and ROOT I/O
+python -m pip install -e '.[munet]' # add TensorFlow and MuNet
+python -m pip install -e '.[test]'  # add test dependencies
 ```
 
-The current sample contains two records with 44,240 and 44,323 tracks. Both
-truth volumes contain material labels `0`, `17`, `19`, and `21`.
+## Quick start
 
-### Geant4 ROOT hit format
-
-The ROOT adapter reads the `hits` tree branches:
-
-```text
-eventNumber
-hitPositionX_truth  hitPositionY_truth  hitPositionZ_truth
-hitMomentumX_truth  hitMomentumY_truth  hitMomentumZ_truth
-```
-
-For every event with at least two hits above and two hits below the cargo, the
-adapter fits two 3-D lines with SVD and intersects them with fixed detector
-reference planes at -100 and +100 cm. It stores the lower point first and upper
-point second, matching the TFRecord ordering, and creates the same `TrackTable`
-used by all methods. Detector planes are deliberately independent of the
-`[-50,+50]` cm target cube. The muonTruck unit conventions are retained:
-
-- stored hit position to centimetres: `× 0.1`
-- stored momentum to MeV: `× 1000`
-
-Inspect a ROOT file:
+Input datasets are intentionally not included in this repository. Set paths to
+your local copies:
 
 ```bash
-ROOT_SAMPLE=/Users/nelsonchan/Muon_Tomo/Muon-Tomography-AI/cosmic_leadBox_200000.root
-muon-tomo inspect "$ROOT_SAMPLE" --limit 1024
+export FUNNY_TFRECORD=/path/to/voxels_prediction_funny.tfrecord
+export ROOT_SAMPLE=/path/to/cosmic_leadBox_200000.root
 ```
 
-## Truth definition
-
-Material labels are mapped through the Mu-Net material table. Relevant funny
-values are:
-
-| Label | Material | \(X_0\) (cm) | \(1/X_0\) (cm⁻¹) |
-|---:|---|---:|---:|
-| 0 | air | ∞ | 0 |
-| 17 | silver | 0.854286 | 1.170569 |
-| 19 | lead | 0.561233 | 1.781790 |
-| 21 | uranium | 0.316623 | 3.158333 |
-
-Export canonical truth:
+Inspect the TFRecord:
 
 ```bash
-muon-tomo truth "$FUNNY" \
-  --record-index 0 \
-  --output outputs/funny/record_0_truth.npz
+muon-tomo inspect "$FUNNY_TFRECORD"
 ```
 
-Air is stored as zero inverse radiation length. Derived radiation length is
-infinite wherever \(\rho_X=0\).
-
-## Physics and unit conversion
-
-The leading multiple-scattering relationship is
-
-\[
-\operatorname{Var}(\theta) \simeq
-\left(\frac{k}{p}\right)^2\frac{L}{X_0}.
-\]
-
-This repository uses the existing project convention
-
-```text
-k = 15 MeV
-p_ref = 3000 MeV
-```
-
-and defines reference scattering density by
-
-\[
-\lambda_{\mathrm{ref}}
-=\left(\frac{k}{p_{\mathrm{ref}}}\right)^2\rho_X.
-\]
-
-When expressed in mrad²/cm:
-
-\[
-\lambda_{\mathrm{ref}}[\mathrm{mrad}^2/\mathrm{cm}]
-=25\,\rho_X[\mathrm{cm}^{-1}],
-\]
-
-so \(\rho_X=\lambda_{\mathrm{ref}}/25\). The classical default assigns
-every event the same fixed effective momentum
-\(p_{\mathrm{eff}}=1743.4602\) MeV. This is the inverse-square population
-prior \(p_{\mathrm{ref}}/\sqrt{E[(p_{\mathrm{ref}}/p)^2]}\) determined once
-from funny record 0; it is not an arithmetic event-momentum average. PoCA and
-likelihood never read an individual event's simulated momentum magnitude.
-The prior is then held fixed for calibration and validation records. Constants
-and the information policy are recorded in configuration and result metadata.
-
-## Reconstruction methods
-
-### Frozen Mu-Net
-
-Mu-Net uses the copied `model_512.weights.h5` or `model_1024.weights.h5`. The
-adapter reproduces the verified 14-feature inference path:
-
-- normalized entry position
-- unit entry direction
-- normalized exit position
-- unit exit direction
-- deterministic zero momentum-estimate channel
-- direction-difference magnitude
-
-Predictions from complete chunks are averaged. The native learned output is
-preserved as `raw_estimator`; negative values are clipped only in the physical
-primary volume. No optimizer, loss, training dataset, `fit`, or weight-writing
-operation exists in the supported workflow.
-
-### PoCA
-
-For each event, PoCA computes the midpoint of closest approach between the
-incoming and outgoing lines. Under the default hardware-compatible information
-policy it deposits
-
-\[
-\widehat{\rho}_{X,i}=
-\frac{\bar p^2}{k^2}
-\frac{(\Delta\theta_{x,i}^2+\Delta\theta_{y,i}^2)/2}{L_{i,\mathrm{voxel}}}
-\]
-
-in the PoCA voxel. Values are averaged over events assigned to that voxel.
-`occupancy_count` is the number of localized events and is never presented as
-the reconstruction itself. Zero-occupancy PoCA and likelihood voxels remain
-zero before and after calibration. Measured voxels are unchanged, while
-`valid_mask` separately records whether a voxel met the configured coverage
-threshold.
-
-### Likelihood/MLEM
-
-The `full` mode ports the muonTruck covariance MLEM structure. For every voxel
-segment with length \(L\) and remaining distance \(T\), it constructs
-
-\[
-W=\begin{bmatrix}
-L & L^2/2+LT\\
-L^2/2+LT & L^3/3+L^2T+LT^2
-\end{bmatrix}.
-\]
-
-The implementation establishes physical upper-to-lower track order, intersects
-both fitted lines with the z=+50 and z=-50 cm grid faces, and forms projected
-angle and displacement observations over that same volume baseline. When PoCA
-lies inside the volume, covariance weights follow the entry-to-PoCA-to-exit
-kinked path; otherwise they follow the face-to-face chord. This avoids the
-audited detector-plane/grid-baseline mismatch that inflated displacement
-density.
-
-Track covariance is assembled sparsely over crossed voxels and updated using
-both projected angular and displacement observations. The default is ten
-iterations with the robust voxel-wise median MLSD update. On the 8,192-track
-funny comparison, 50 iterations overfit sparse rays; ten is therefore the
-validated default, not merely a speed setting. Internal reference scattering
-density is converted to canonical \(1/X_0\), and every covariance uses the
-same fixed effective momentum rather than hidden per-event momentum.
-
-The optional `angular` mode remains available as a diagnostic path-integral
-estimator, but it is not the validated comparison default and must have its own
-calibration. Full likelihood is calibrated from eroded, covered material-region
-means because its sparse voxel distribution is strongly skewed; Mu-Net and
-PoCA retain material medians. Calibration is bounded to the truth range present
-in the calibration sample. Zero-occupancy voxels use the same single-pass
-zero-occupancy voxels remain zero; the coverage mask is retained separately.
-
-## Run all methods on `funny`
-
-The following reproduces the validated same-track workflow. Each method sees
-the same deterministically selected 8,192 events and the same geometry:
+Run all methods on Funny record 0 with a deterministic 8,192-track selection:
 
 ```bash
-mkdir -p outputs/funny
-
-muon-tomo reconstruct "$FUNNY" \
+muon-tomo reconstruct "$FUNNY_TFRECORD" \
   --record-index 0 \
   --method all \
   --limit 8192 \
@@ -347,39 +207,72 @@ muon-tomo reconstruct "$FUNNY" \
   --classical-momentum-policy mean \
   --average-momentum-mev 1743.4601815051958 \
   --output-dir outputs/funny
-
-muon-tomo reconstruct "$FUNNY" \
-  --record-index 1 \
-  --method all \
-  --limit 8192 \
-  --seed 0 \
-  --max-chunks 8 \
-  --iterations 10 \
-  --likelihood-mode full \
-  --classical-momentum-policy mean \
-  --average-momentum-mev 1743.4601815051958 \
-  --output-dir outputs/funny
 ```
 
-When Mu-Net is included, the selected tracks are trimmed once to a whole number
-of Mu-Net dosage chunks and that exact ordered selection is passed to all three
-methods. A SHA-256 fingerprint over event IDs, positions, directions, and
-momenta is stored in every result and must match during validation. Omit
-`--limit` and `--max-chunks` to use the largest common complete-chunk selection.
+Validate that all reconstruction outputs share the selected tracks and grid:
 
-`mean` means a fixed population prior, not the arithmetic mean of hidden
-momenta in the selected simulation record. `per-track` remains available only
-to reproduce earlier studies and is rejected by the aligned-comparison
-validator.
+```bash
+muon-tomo validate \
+  outputs/funny/record_0_munet.npz \
+  outputs/funny/record_0_poca.npz \
+  outputs/funny/record_0_likelihood.npz \
+  --truth outputs/funny/record_0_truth.npz \
+  --output outputs/funny/record_0_validation.json
+```
 
-## Fixed detector-error stability test
+Compute full-grid metrics:
 
-Create one reproducible, standalone error-perturbed TFRecord and compare clean
-and errored 8,192-track reconstructions without retraining or recalibrating:
+```bash
+muon-tomo compare \
+  --truth outputs/funny/record_0_truth.npz \
+  outputs/funny/record_0_munet.npz \
+  outputs/funny/record_0_poca.npz \
+  outputs/funny/record_0_likelihood.npz \
+  --output outputs/funny/record_0_metrics.json
+```
+
+## Calibration and evaluation
+
+The repository supports a versioned affine calibration from method-native
+output to \(1/X_0\). Calibration is post-processing only: it does not retrain
+MuNet or alter frozen weights.
+
+The documented Funny protocol fits calibration on record 0 and evaluates it on
+record 1:
+
+```bash
+muon-tomo calibrate \
+  --dataset "$FUNNY_TFRECORD" \
+  --results-dir outputs/funny \
+  --fit-records 0 \
+  --validate-records 1 \
+  --calibration-id funny-v4-robust-mlsd \
+  --output configs/funny-v4-robust-mlsd.calibration.json
+```
+
+Comparisons report MSE over the complete aligned `64³` volume. A displayed
+slice or slab never changes the evaluation scope.
+
+## Stability test
+
+The stability workflow creates one standalone, reproducible errored TFRecord,
+then compares clean and errored predictions using the same truth, configuration,
+and calibration.
+
+The documented error model is:
+
+| Variable | Perturbation |
+|---|---|
+| Entry/exit `x, y` positions | Independent Gaussian error, \(\sigma=0.29\) cm |
+| Entry/exit `z` positions | Unchanged |
+| Entry/exit directions | Gaussian angular error, \(\sigma=0.5^\circ\), then renormalized |
+| Momentum magnitudes | Unchanged in the derived record |
+
+Example:
 
 ```bash
 muon-tomo stability \
-  --dataset "$FUNNY" \
+  --dataset "$FUNNY_TFRECORD" \
   --record-index 0 \
   --limit 8192 \
   --position-sigma-cm 0.29 \
@@ -391,57 +284,14 @@ muon-tomo stability \
   --output-dir outputs/stability/funny_record0_8192
 ```
 
-The command preserves both z coordinates and entry momentum magnitudes, then
-rotates normalized entry and exit directions by an isotropic Gaussian angular
-error. It records measured residuals, writes the derived GZIP TFRecord, both
-three-method result sets, and `stability_mse_comparison.json`. The same
-calibration is applied to clean and errored reconstructions; it is never fit to
-the perturbed data.
+The output directory includes a `stability_mse_comparison.json` report.
 
-## Calibrate with `funny`
+## Plots and interactive 3D viewer
 
-The current `funny-v4-robust-mlsd` protocol fits record 0 and evaluates
-record 1 under the fixed-average policy:
+### 2D comparison plot
 
-```bash
-muon-tomo calibrate \
-  --dataset "$FUNNY" \
-  --results-dir outputs/funny \
-  --fit-records 0 \
-  --validate-records 1 \
-  --calibration-id funny-v4-robust-mlsd \
-  --output configs/funny-v4-robust-mlsd.calibration.json
-```
-
-For each method the calibration code:
-
-1. maps material labels to \(1/X_0\);
-2. erodes non-air material masks by the configured two voxels;
-3. intersects masks with the method's `valid_mask`;
-4. measures material medians for Mu-Net/PoCA and covered-region means for
-   sparse full-covariance likelihood;
-5. fits a versioned, nonnegative-slope affine map into \(1/X_0\), bounded to
-   the truth range represented by the calibration sample;
-6. records the fit statistic, regions, settings, and record-1 metrics.
-
-This is post-processing only. Mu-Net weights are not changed.
-
-Apply a calibration during reconstruction:
-
-```bash
-muon-tomo reconstruct "$FUNNY" \
-  --record-index 1 \
-  --method all \
-  --likelihood-mode full \
-  --classical-momentum-policy mean \
-  --average-momentum-mev 1743.4601815051958 \
-  --calibration configs/funny-v4-robust-mlsd.calibration.json \
-  --output-dir outputs/funny_calibrated
-```
-
-## Plot the aligned comparison
-
-Generate the four 64×64 panels as a seven-layer mean slab around `z=32`:
+Create a four-panel top view—truth, MuNet, PoCA, and likelihood—as a seven
+layer average around `z = 32`:
 
 ```bash
 muon-tomo plot \
@@ -452,34 +302,26 @@ muon-tomo plot \
   --calibration configs/funny-v4-robust-mlsd.calibration.json \
   --center-index 32 \
   --slab-layers 7 \
-  --output outputs/figures/funny_record0_robust_mlsd_slab7.png \
-  --metrics-output outputs/funny/record_0_plot_metrics.json
+  --projection-axis z \
+  --output outputs/figures/funny_record0_top_view.png
 ```
 
-All panels use the same physical colour scale. Each title reports MSE over the
-complete aligned `64³` volume, not over the displayed slab. The truth panel
-labels the silver, lead, and uranium \(1/X_0\) values.
+The truth panel includes the material values for the relevant Funny sample.
+The plotter also supports a high-contrast material key for air, silver, lead,
+and uranium. All panels share a physical color scale; panel titles report the
+full-grid MSE, not slice-only MSE.
 
-Use `--full-depth` to average all 64 layers along the selected projection
-axis. `--projection-axis z` produces the x–y grid, `--projection-axis x`
-produces the y–z grid, and `--projection-axis y` produces the x–z grid. Every
-output remains 64×64, uses the same physical bounds and colour scale within
-its four panels, and reports MSE over the original full 64³ volume.
-
-For example, append one of the following pairs to the plot command:
+Use one of the following options for full-depth views:
 
 ```text
---full-depth --projection-axis z  # x-y view
---full-depth --projection-axis x  # y-z view
---full-depth --projection-axis y  # x-z view
+--full-depth --projection-axis z  # x–y top view
+--full-depth --projection-axis x  # y–z side view
+--full-depth --projection-axis y  # x–z side view
 ```
 
-## Interactive 3D voxel-cube viewer
+### Interactive 3D viewer
 
-`plot3d` writes one self-contained HTML viewer containing Truth, MuNet, PoCA,
-and Likelihood on the canonical 64³/±50 cm region. Use the dropdown to switch
-volumes, drag to rotate, scroll to zoom, and hover over a cube to read its
-position and calibrated inverse radiation length.
+Generate a self-contained HTML viewer:
 
 ```bash
 muon-tomo plot3d \
@@ -491,196 +333,155 @@ muon-tomo plot3d \
   --threshold-cm-inv 0.7 \
   --opacity 0.60 \
   --max-cubes 12000 \
-  --output outputs/figures/funny_record0_3d_voxels.html \
-  --metrics-output outputs/funny/record_0_3d_metrics.json
+  --output outputs/figures/funny_record0_3d_voxels.html
 ```
 
-Each displayed voxel is a physical 1.5625 cm cube positioned from the shared
-`GridGeometry`. All four volumes use the same 0-to-truth-maximum colour scale,
-and the gray wireframe marks the complete reconstruction boundary. Opacity
-increases monotonically with density and is capped by `--opacity`; the default
-maximum is 0.60.
-
-The viewer includes thresholded interior cubes by default and deterministically
-caps each volume at `--max-cubes`. Use `--surface-only` for a smaller boundary
-focused view when rotation performance is more important than interior detail.
-`--include-interior` draws interior cubes too, but can produce a much larger
-HTML file and substantially higher browser memory use. The JSON report records
-eligible and displayed cube counts so subsampling is never hidden.
-
-## Run all methods on Geant4 ROOT
+Open the result on macOS:
 
 ```bash
-muon-tomo reconstruct "$ROOT_SAMPLE" \
-  --method all \
-  --limit 1024 \
-  --seed 0 \
-  --max-chunks 1 \
-  --iterations 2 \
-  --likelihood-mode full \
-  --classical-momentum-policy mean \
-  --average-momentum-mev 1743.4601815051958 \
-  --output-dir outputs/root_smoke
+open outputs/figures/funny_record0_3d_voxels.html
 ```
 
-For a higher-statistics run, omit the track/chunk limits. Keep the validated
-ten likelihood iterations unless a separate convergence study justifies a
-change. A ROOT input has no embedded voxel truth;
-comparison requires a separately exported truth volume using the identical
-geometry.
+Use the dropdown to select truth or a reconstruction, drag to rotate, scroll
+to zoom, and hover to inspect voxel values. By default, interior voxels are
+included, values below `0.7 cm⁻¹` are transparent, and opacity is capped at
+`0.60`. Use `--surface-only` to reduce the number of displayed cubes.
 
-## Output schema
+## Output format
 
-Every method writes a compressed NPZ with these keys:
+Each reconstruction is stored as a compressed NPZ file:
 
 | Key | Shape | Meaning |
 |---|---|---|
-| `inverse_radiation_length_cm_inv` | `64³` | primary calibrated physical result |
-| `radiation_length_cm` | `64³` | derived \(X_0\), `inf` where \(\rho_X=0\) |
-| `scattering_density_ref_mrad2_per_cm` | `64³` | derived reference scattering density |
-| `raw_estimator` | `64³` | untouched method-native volume |
-| `occupancy_count` | `64³` | method-specific coverage, never density |
-| `valid_mask` | `64³` | voxels valid for quantitative comparison |
-| `uncertainty` | `64³` | optional method uncertainty |
-| `metadata_json` | scalar | units, geometry, method, source, and settings |
+| `inverse_radiation_length_cm_inv` | `64³` | Primary physical reconstruction |
+| `radiation_length_cm` | `64³` | Derived \(X_0\); infinite where prediction is zero |
+| `scattering_density_ref_mrad2_per_cm` | `64³` | Derived reference scattering density |
+| `raw_estimator` | `64³` | Method-native output before calibration |
+| `occupancy_count` | `64³` | Method-specific coverage count |
+| `valid_mask` | `64³` | Quantitative-comparison mask |
+| `uncertainty` | `64³`, optional | Method uncertainty, if available |
+| `metadata_json` | scalar | Geometry, units, settings, source, and track fingerprint |
 
-Truth NPZ files contain:
+Truth NPZ files contain `material_labels`,
+`inverse_radiation_length_cm_inv`, and `metadata_json`.
 
-- `material_labels`
-- `inverse_radiation_length_cm_inv`
-- `metadata_json`
+## Validation and testing
 
-## Validate and compare
+The validator checks shared geometry, axis order, selected-track fingerprint,
+and the declared shared classical momentum policy.
 
-Validate that truth and a three-method set share the exact grid, orientation,
-scale, ordered selected-track fingerprint, and shared classical momentum
-policy/value:
-
-```bash
-muon-tomo validate \
-  outputs/funny/record_0_munet.npz \
-  outputs/funny/record_0_poca.npz \
-  outputs/funny/record_0_likelihood.npz \
-  --truth outputs/funny/record_0_truth.npz \
-  --output outputs/funny/record_0_validation.json
-```
-
-Compare results in the same physical units:
-
-```bash
-muon-tomo compare \
-  --truth outputs/funny/record_0_truth.npz \
-  outputs/funny/record_0_munet.npz \
-  outputs/funny/record_0_poca.npz \
-  outputs/funny/record_0_likelihood.npz \
-  --output outputs/funny/record_0_metrics.json
-```
-
-Every comparison reports MSE over the complete aligned `64³` grid, after the
-zero values for zero-occupancy PoCA and likelihood voxels. It also
-reports coverage-conditioned MAE, RMSE, bias, coverage, and value ranges in
-cm⁻¹. Cross-section figures always annotate the full-volume `64³` MSE, never a
-slice-only MSE.
-
-## Tests
-
-Run the portable suite:
+Run the portable test suite:
 
 ```bash
 TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 pytest -q
 ```
 
-Run the real TFRecord integration test:
+Optional integration tests require local input data:
 
 ```bash
-FUNNY_TFRECORD="$FUNNY" \
-TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 \
-pytest -q tests/test_tfrecord_integration.py
+FUNNY_TFRECORD="$FUNNY_TFRECORD" pytest -q tests/test_tfrecord_integration.py
+GEANT4_ROOT_SAMPLE="$ROOT_SAMPLE" pytest -q tests/test_root_integration.py
 ```
 
-Run the real ROOT integration test:
+The tests cover geometry, units, truth mapping, reconstruction result schema,
+track selection, plotting, the 3D viewer, stability data, TFRecord parsing,
+and ROOT adaptation.
 
-```bash
-GEANT4_ROOT_SAMPLE="$ROOT_SAMPLE" \
-TMPDIR=/tmp PYTHONDONTWRITEBYTECODE=1 \
-pytest -q tests/test_root_integration.py
+## Known limitation: likelihood/MLEM
+
+The likelihood/MLEM workflow runs successfully and produces schema-valid,
+geometry-aligned output. In the recorded Funny comparisons, however, its
+full-grid MSE is higher than the corresponding MuNet and PoCA results, and it
+is not currently presented as a trusted quantitative material-density
+reconstruction.
+
+The repository retains likelihood/MLEM because it is part of the unified
+comparison and stability workflow. This README intentionally does not assign an
+unverified explanation for the observed performance.
+
+## Repository layout
+
+```text
+muon-tomography-unified/
+├── configs/              shared settings and versioned calibration files
+├── LICENSES/             complete reusable licence texts
+├── src/muon_tomo/
+│   ├── _vendor/munet/    frozen MuNet architecture and weights
+│   ├── configs/          packaged runtime default configuration
+│   ├── io/               TFRecord and ROOT adapters
+│   ├── reconstruction/   MuNet, PoCA, and likelihood implementations
+│   ├── plotting.py       2D comparison plots
+│   ├── plotting3d.py     self-contained Plotly viewer
+│   ├── stability.py      fixed detector-error workflow
+│   └── cli.py            unified command-line interface
+├── tests/                unit, synthetic, and integration tests
+├── third_party/          provenance and license records
+├── CONTRIBUTING.md       development and review requirements
+├── VALIDATION.md         recorded validation notes
+├── NOTICE                source attribution
+└── pyproject.toml        package definition
 ```
 
-Tests cover the fixed `64³`/±50 cm contract, Mu-Net normalization equivalence,
-positive xyz orientation without swaps or reflections, physical landmark
-mapping, exact selected-track fingerprints, segment-length accounting, unit
-conversions, material truth, result round-trips, both likelihood modes, physical track ordering, grid-face extrapolation,
-PoCA-kinked MLSD paths, PoCA count separation, TFRecord parsing, and ROOT
-detector-plane ordering.
+Generated files are written under `outputs/`, which is excluded from Git.
 
-## Configuration
+## Data, reproducibility, and provenance
 
-[`configs/default.yaml`](configs/default.yaml) is the single default source for:
+- Input TFRecords, ROOT files, and generated outputs are not distributed with
+  the repository.
+- MuNet weights are stored in the repository and their checksums are recorded
+  under `third_party/`.
+- Every reconstruction records geometry, units, configuration, and a selected
+  track fingerprint in metadata.
+- The source projects and copied components are documented in `NOTICE` and
+  `third_party/`.
 
-- geometry bounds, shape, and axis order;
-- Highland constant and reference momentum;
-- fixed population-average momentum and classical information policy;
-- frozen Mu-Net dosage and feature normalization;
-- PoCA coverage threshold;
-- likelihood initialization, robust update, iteration count, detector resolution, and numerical bounds;
-- calibration mask erosion and intercept policy.
+Before publishing a fork, do not add datasets or generated outputs unless you
+have explicit permission to redistribute them.
 
-Pass an alternative read-only configuration with `--config PATH`. Any geometry
-with a shape other than `64³` is rejected.
+## License and acknowledgements
 
-## Reproducibility
+This repository contains components under different licensing conditions. The
+original unified integration code and the vendored MuNet implementation are
+available under Apache-2.0. The licence for the adapted muonTruck material has
+not been confirmed, so the complete repository must not be redistributed
+publicly until permission or a compatible upstream licence is established.
+See [LICENSE](LICENSE) and [NOTICE](NOTICE) for the exact component boundaries.
 
-Each result records:
+MuNet code and frozen-weight provenance are documented in
+[NOTICE](NOTICE) and [third_party](third_party/). The likelihood implementation
+adapts the established muonTruck covariance reconstruction structure within the
+common geometry and result schema used here.
 
-- absolute input path and format;
-- TFRecord record index or ROOT tree;
-- deterministic selection limit and seed;
-- method and algorithm mode;
-- frozen weight path and dosage for Mu-Net;
-- likelihood iteration and convergence history;
-- whether per-muon momentum was used and the assumed population-average value;
-- geometry and units;
-- calibration parameters, if applied.
+### Upstream method attribution
 
-The source data is never copied into generated output and never rewritten.
+This project uses the MuNet architecture and frozen weights from the original
+MuNet work. It also adapts the PoCA and likelihood implementation from the
+original muonTruck research source. Please acknowledge both upstream projects
+when reporting results obtained with this repository.
 
-## Troubleshooting
+**MuNet paper**
 
-### TensorFlow prints XLA or retracing messages
+> Lim, Li Xin Jed, and Ziming Qiu. “μ-Net: ConvNext-Based U-Nets for Cosmic
+> Muon Tomography.” *arXiv preprint* arXiv:2312.17265 (2023).
+> [https://arxiv.org/abs/2312.17265](https://arxiv.org/abs/2312.17265)
 
-These messages come from the copied Mu-Net architecture and do not imply that
-weights are being trained. Inference calls always use `training=False`.
+The associated source implementation is
+[jedlimlx/Muon-Tomography-AI](https://github.com/jedlimlx/Muon-Tomography-AI),
+released under Apache-2.0. This unified repository does not claim authorship of
+MuNet; it integrates the supplied frozen model into a common comparison
+workflow.
 
-### Mu-Net says there are not enough tracks
+**PoCA and likelihood / MLEM source**
 
-The frozen models require at least one complete chunk of 512 or 1024 tracks.
-Select the matching dosage or provide more events.
+> K. Fung. *muonTruck* research code, `recon/generate_tfrecord.py`.
+> GitHub repository. Accessed 24 August 2026.
+> [https://github.com/kfung010/muonTruck](https://github.com/kfung010/muonTruck)
 
-### A calibration produces unexpected values
+The PoCA and likelihood components in this repository are adapted from that
+source. This is a software citation rather than a paper citation; if the
+muonTruck authors provide a preferred scholarly reference, use it in addition
+to the source-code citation above.
 
-Confirm that reconstruction and calibration used the same likelihood mode,
-geometry, event selection, material table, and units. Inspect `raw_estimator`
-and `metadata_json` before refitting.
-
-### A voxel is zero
-
-Check `valid_mask` and `occupancy_count`. Zero in an unobserved voxel is storage,
-not evidence that the material is air.
-
-### ROOT branches are rejected
-
-Use `muon-tomo inspect FILE.root`. The adapter reports missing branches and the
-selected tree name explicitly.
-
-## Provenance and licensing
-
-Mu-Net architecture code and frozen weights were copied from the local
-`Muon-Tomography-AI` project. That project is Apache-2.0 licensed; its complete
-license is retained in `third_party/Muon-Tomography-AI-LICENSE`.
-
-PoCA and likelihood were adapted from the local `muonTruck` reconstruction at
-revision `8393853a47e8654552a62d1886fb6766d637782f`, including relevant local
-research changes. No license file was found there, so redistribution beyond the
-owner's environment requires confirmation of the applicable license.
-
-See [`NOTICE`](NOTICE) for details.
+GitHub and compatible reference managers can also read the repository's
+[CITATION.cff](CITATION.cff). Development and review instructions are in
+[CONTRIBUTING.md](CONTRIBUTING.md).

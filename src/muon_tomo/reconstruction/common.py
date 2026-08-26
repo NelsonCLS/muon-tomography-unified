@@ -7,7 +7,6 @@ import numpy as np
 from ..geometry import GridGeometry
 from ..types import TrackTable
 
-
 MOMENTUM_POLICIES = ("mean", "per-track")
 
 
@@ -22,9 +21,7 @@ def reconstruction_momenta(
     option is retained only to reproduce earlier studies.
     """
     if policy not in MOMENTUM_POLICIES:
-        raise ValueError(
-            f"momentum policy must be one of {MOMENTUM_POLICIES}, got {policy!r}"
-        )
+        raise ValueError(f"momentum policy must be one of {MOMENTUM_POLICIES}, got {policy!r}")
     if not len(tracks):
         raise ValueError("reconstruction requires at least one track")
     average_momentum_mev = float(average_momentum_mev)
@@ -38,9 +35,7 @@ def reconstruction_momenta(
         "momentum_policy": policy,
         "per_muon_momentum_used": policy == "per-track",
         "assumed_momentum_mev": average_momentum_mev if policy == "mean" else None,
-        "average_momentum_source": (
-            "configured population prior" if policy == "mean" else None
-        ),
+        "average_momentum_source": ("configured population prior" if policy == "mean" else None),
     }
 
 
@@ -107,11 +102,15 @@ def physical_grid_intersections(
     outgoing_dz = outgoing[:, 2]
     valid = (np.abs(incoming_dz) > 1.0e-12) & (np.abs(outgoing_dz) > 1.0e-12)
     entry_t = np.divide(
-        upper_z - starts[:, 2], incoming_dz, out=np.full(len(tracks), np.nan),
+        upper_z - starts[:, 2],
+        incoming_dz,
+        out=np.full(len(tracks), np.nan),
         where=np.abs(incoming_dz) > 1.0e-12,
     )
     exit_t = np.divide(
-        lower_z - ends[:, 2], outgoing_dz, out=np.full(len(tracks), np.nan),
+        lower_z - ends[:, 2],
+        outgoing_dz,
+        out=np.full(len(tracks), np.nan),
         where=np.abs(outgoing_dz) > 1.0e-12,
     )
     entries = starts + entry_t[:, None] * incoming
@@ -158,7 +157,7 @@ def prepare_poca_paths(
     occupancy = np.zeros(geometry.n_voxels, dtype=np.int64)
     kinked = 0
     for start, direction_in, end, direction_out in zip(
-        starts, incoming, ends, outgoing
+        starts, incoming, ends, outgoing, strict=True
     ):
         if not np.isfinite(start).all() or not np.isfinite(end).all():
             paths.append(np.empty(0, dtype=np.int64))
@@ -182,7 +181,7 @@ def prepare_poca_paths(
 
 def path_occupancy(tracks: TrackTable, geometry: GridGeometry) -> np.ndarray:
     flat = np.zeros(geometry.n_voxels, dtype=np.int64)
-    for start, end in zip(tracks.entry_position_cm, tracks.exit_position_cm):
+    for start, end in zip(tracks.entry_position_cm, tracks.exit_position_cm, strict=True):
         indices, _ = geometry.trace_segment(start, end)
         if len(indices):
             np.add.at(flat, geometry.flat_index(indices), 1)
@@ -196,7 +195,7 @@ def prepare_paths(
     paths: list[np.ndarray] = []
     lengths: list[np.ndarray] = []
     occupancy = np.zeros(geometry.n_voxels, dtype=np.int64)
-    for start, end in zip(tracks.entry_position_cm, tracks.exit_position_cm):
+    for start, end in zip(tracks.entry_position_cm, tracks.exit_position_cm, strict=True):
         idx, lens = geometry.trace_segment(start, end)
         flat = geometry.flat_index(idx) if len(idx) else np.empty(0, dtype=np.int64)
         paths.append(flat)

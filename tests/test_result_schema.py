@@ -1,4 +1,5 @@
 import json
+
 import numpy as np
 
 from muon_tomo.geometry import GridGeometry
@@ -9,8 +10,13 @@ def test_result_round_trip(tmp_path):
     geometry = GridGeometry()
     rho = np.ones((64, 64, 64), dtype=np.float32)
     result = ReconstructionResult(
-        "test", rho, rho.copy(), np.ones_like(rho, dtype=np.int64),
-        np.ones_like(rho, dtype=bool), geometry, {"purpose": "unit-test"},
+        "test",
+        rho,
+        rho.copy(),
+        np.ones_like(rho, dtype=np.int64),
+        np.ones_like(rho, dtype=bool),
+        geometry,
+        {"purpose": "unit-test"},
     )
     path = result.save(tmp_path / "result.npz")
     loaded = ReconstructionResult.load(path)

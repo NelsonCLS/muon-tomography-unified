@@ -73,9 +73,7 @@ def test_sparse_calibration_preserves_zero_for_invalid_voxels(method):
     counts = np.zeros_like(raw, dtype=np.int64)
     raw[1, 2, 3] = 2.0
     counts[1, 2, 3] = 1
-    result = ReconstructionResult(
-        method, raw, raw, counts, counts > 0, geometry
-    )
+    result = ReconstructionResult(method, raw, raw, counts, counts > 0, geometry)
     model = CalibrationModel(method, slope=2.0, intercept=0.5)
 
     calibrated = apply_calibration(result, model)

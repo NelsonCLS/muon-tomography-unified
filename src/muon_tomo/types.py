@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import json
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -44,7 +44,9 @@ class TrackTable:
         for name in ("entry_position_cm", "entry_direction", "exit_position_cm", "exit_direction"):
             if len(getattr(self, name)) != n:
                 raise ValueError(f"{name} length differs from momentum length")
-        if np.any(~np.isfinite(self.entry_position_cm)) or np.any(~np.isfinite(self.exit_position_cm)):
+        if np.any(~np.isfinite(self.entry_position_cm)) or np.any(
+            ~np.isfinite(self.exit_position_cm)
+        ):
             raise ValueError("positions must be finite")
         if np.any(~np.isfinite(self.momentum_mev)) or np.any(self.momentum_mev <= 0):
             raise ValueError("momentum_mev must be finite and positive")
@@ -58,26 +60,34 @@ class TrackTable:
     def __len__(self) -> int:
         return len(self.momentum_mev)
 
-    def subset(self, limit: int | None = None, seed: int = 0) -> "TrackTable":
+    def subset(self, limit: int | None = None, seed: int = 0) -> TrackTable:
         if limit is None or limit >= len(self):
             idx = np.arange(len(self))
         else:
             idx = np.sort(np.random.default_rng(seed).choice(len(self), size=limit, replace=False))
         return TrackTable(
-            self.entry_position_cm[idx], self.entry_direction[idx],
-            self.exit_position_cm[idx], self.exit_direction[idx],
-            self.momentum_mev[idx], self.event_id[idx], self.source,
+            self.entry_position_cm[idx],
+            self.entry_direction[idx],
+            self.exit_position_cm[idx],
+            self.exit_direction[idx],
+            self.momentum_mev[idx],
+            self.event_id[idx],
+            self.source,
             {**self.metadata, "selection_limit": limit, "selection_seed": seed},
         )
 
-    def take_first(self, count: int) -> "TrackTable":
+    def take_first(self, count: int) -> TrackTable:
         if count < 0 or count > len(self):
             raise ValueError(f"count must be between 0 and {len(self)}")
         idx = np.arange(count)
         return TrackTable(
-            self.entry_position_cm[idx], self.entry_direction[idx],
-            self.exit_position_cm[idx], self.exit_direction[idx],
-            self.momentum_mev[idx], self.event_id[idx], self.source,
+            self.entry_position_cm[idx],
+            self.entry_direction[idx],
+            self.exit_position_cm[idx],
+            self.exit_direction[idx],
+            self.momentum_mev[idx],
+            self.event_id[idx],
+            self.source,
             {**self.metadata, "tracks_taken_from_selection": count},
         )
 
@@ -106,7 +116,10 @@ class TruthVolume:
         self.inverse_radiation_length_cm_inv = np.asarray(
             self.inverse_radiation_length_cm_inv, dtype=np.float32
         )
-        if self.material_labels.shape != GRID_SHAPE or self.inverse_radiation_length_cm_inv.shape != GRID_SHAPE:
+        if (
+            self.material_labels.shape != GRID_SHAPE
+            or self.inverse_radiation_length_cm_inv.shape != GRID_SHAPE
+        ):
             raise ValueError(f"truth arrays must have shape {GRID_SHAPE}")
 
 
@@ -122,12 +135,19 @@ class ReconstructionResult:
     uncertainty: np.ndarray | None = None
 
     def __post_init__(self) -> None:
-        for name in ("inverse_radiation_length_cm_inv", "raw_estimator", "occupancy_count", "valid_mask"):
+        for name in (
+            "inverse_radiation_length_cm_inv",
+            "raw_estimator",
+            "occupancy_count",
+            "valid_mask",
+        ):
             arr = np.asarray(getattr(self, name))
             if arr.shape != GRID_SHAPE:
                 raise ValueError(f"{name} must have shape {GRID_SHAPE}, got {arr.shape}")
             setattr(self, name, arr)
-        self.inverse_radiation_length_cm_inv = self.inverse_radiation_length_cm_inv.astype(np.float32)
+        self.inverse_radiation_length_cm_inv = self.inverse_radiation_length_cm_inv.astype(
+            np.float32
+        )
         self.raw_estimator = self.raw_estimator.astype(np.float32)
         self.occupancy_count = self.occupancy_count.astype(np.int64)
         self.valid_mask = self.valid_mask.astype(bool)
@@ -174,13 +194,21 @@ class ReconstructionResult:
         return target
 
     @classmethod
-    def load(cls, path: str | Path) -> "ReconstructionResult":
+    def load(cls, path: str | Path) -> ReconstructionResult:
         with np.load(path, allow_pickle=False) as data:
             metadata = json.loads(str(data["metadata_json"]))
             gm = metadata["geometry"]
-            geometry = GridGeometry(tuple(gm["lower_cm"]), tuple(gm["upper_cm"]), tuple(gm["shape"]), gm["axis_order"])
+            geometry = GridGeometry(
+                tuple(gm["lower_cm"]), tuple(gm["upper_cm"]), tuple(gm["shape"]), gm["axis_order"]
+            )
             uncertainty = data["uncertainty"] if "uncertainty" in data.files else None
             return cls(
-                metadata["method"], data["inverse_radiation_length_cm_inv"], data["raw_estimator"],
-                data["occupancy_count"], data["valid_mask"], geometry, metadata, uncertainty,
+                metadata["method"],
+                data["inverse_radiation_length_cm_inv"],
+                data["raw_estimator"],
+                data["occupancy_count"],
+                data["valid_mask"],
+                geometry,
+                metadata,
+                uncertainty,
             )

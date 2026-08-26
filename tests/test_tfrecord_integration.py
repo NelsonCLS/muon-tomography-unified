@@ -6,7 +6,6 @@ import pytest
 
 from muon_tomo.io.tfrecord import inspect_tfrecord, load_tfrecord_record
 
-
 FUNNY = Path(os.environ.get("FUNNY_TFRECORD", "/nonexistent/funny.tfrecord"))
 
 
