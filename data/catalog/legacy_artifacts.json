@@ -1,0 +1,311 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "outputs:custom-generation-validation",
+      "entry_point": null,
+      "files": 11,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/custom-generation-validation",
+      "reports": [],
+      "size_bytes": 9740642,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:detector-only-comparison",
+      "entry_point": null,
+      "files": 5,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/detector-only-comparison",
+      "reports": [],
+      "size_bytes": 6605586,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-after-side-exit",
+      "entry_point": null,
+      "files": 9,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-after-side-exit",
+      "reports": [],
+      "size_bytes": 34838828,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-after-side-exit-8192",
+      "entry_point": null,
+      "files": 13,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-after-side-exit-8192",
+      "reports": [],
+      "size_bytes": 70163428,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-after-side-exit-8192-pertrack",
+      "entry_point": null,
+      "files": 3,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-after-side-exit-8192-pertrack",
+      "reports": [],
+      "size_bytes": 2261952,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-current-best",
+      "entry_point": "metrics.json",
+      "files": 9,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-current-best",
+      "reports": [],
+      "size_bytes": 58135649,
+      "status": "legacy_assembled_comparison"
+    },
+    {
+      "artifact_id": "outputs:funny-fixed-momentum-raw",
+      "entry_point": null,
+      "files": 3,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-fixed-momentum-raw",
+      "reports": [],
+      "size_bytes": 36246909,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-munet-fixed-momentum",
+      "entry_point": null,
+      "files": 3,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-munet-fixed-momentum",
+      "reports": [],
+      "size_bytes": 3860662,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-poca-32",
+      "entry_point": null,
+      "files": 9,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-poca-32",
+      "reports": [],
+      "size_bytes": 69646258,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-poca-32-corrected",
+      "entry_point": null,
+      "files": 5,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-poca-32-corrected",
+      "reports": [],
+      "size_bytes": 310422,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-target-crossing-comparison",
+      "entry_point": null,
+      "files": 21,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-target-crossing-comparison",
+      "reports": [
+        "README.md"
+      ],
+      "size_bytes": 123380453,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:funny-track-composition",
+      "entry_point": null,
+      "files": 6,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/funny-track-composition",
+      "reports": [],
+      "size_bytes": 3255035,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:lead-block-25cm-8192",
+      "entry_point": null,
+      "files": 11,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/lead-block-25cm-8192",
+      "reports": [],
+      "size_bytes": 7284601,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:lead-block-25cm-poca-grid-sigma",
+      "entry_point": null,
+      "files": 19,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/lead-block-25cm-poca-grid-sigma",
+      "reports": [],
+      "size_bytes": 14378020,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:likelihood-audit",
+      "entry_point": null,
+      "files": 43,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/likelihood-audit",
+      "reports": [
+        "REPORT.md"
+      ],
+      "size_bytes": 53142913,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:likelihood-development",
+      "entry_point": "CHECKPOINT_REPORT.md",
+      "files": 129,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/likelihood-development",
+      "reports": [
+        "CHECKPOINT_REPORT.md"
+      ],
+      "size_bytes": 55426364,
+      "status": "stopped_checkpoint"
+    },
+    {
+      "artifact_id": "outputs:local-check",
+      "entry_point": null,
+      "files": 14,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/local-check",
+      "reports": [],
+      "size_bytes": 65279440,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:mismatch-check",
+      "entry_point": null,
+      "files": 15,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/mismatch-check",
+      "reports": [],
+      "size_bytes": 73519608,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:munet-training-estimate",
+      "entry_point": null,
+      "files": 4,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/munet-training-estimate",
+      "reports": [],
+      "size_bytes": 7883,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:poca-exposure-study",
+      "entry_point": null,
+      "files": 16,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/poca-exposure-study",
+      "reports": [
+        "README.md"
+      ],
+      "size_bytes": 54928249,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:poca-grid-sigma-study",
+      "entry_point": null,
+      "files": 17,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/poca-grid-sigma-study",
+      "reports": [
+        "README.md"
+      ],
+      "size_bytes": 13619259,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:poca-presentation",
+      "entry_point": null,
+      "files": 178,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/poca-presentation",
+      "reports": [],
+      "size_bytes": 20890536,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "outputs:random-prediction",
+      "entry_point": null,
+      "files": 64,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "outputs/random-prediction",
+      "reports": [],
+      "size_bytes": 362017326,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "experiments:detector_only_likelihood",
+      "entry_point": "README.md",
+      "files": 209,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "experiments/detector_only_likelihood",
+      "reports": [
+        "README.md",
+        "report.html"
+      ],
+      "size_bytes": 92104916,
+      "status": "experimental"
+    },
+    {
+      "artifact_id": "experiments:legacy_recipes",
+      "entry_point": null,
+      "files": 18,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "experiments/legacy_recipes",
+      "reports": [
+        "README.md"
+      ],
+      "size_bytes": 76683,
+      "status": "legacy_unclassified"
+    },
+    {
+      "artifact_id": "experiments:likelihood_physics_study",
+      "entry_point": "README.md",
+      "files": 115,
+      "identity_verification": "filesystem_metadata_only",
+      "modified": false,
+      "path": "experiments/likelihood_physics_study",
+      "reports": [
+        "REPORT.md",
+        "README.md",
+        "report.html"
+      ],
+      "size_bytes": 94539558,
+      "status": "experimental_validated_option"
+    }
+  ],
+  "purpose": "discovery_only; no inferred missing scientific provenance",
+  "schema_version": 1
+}

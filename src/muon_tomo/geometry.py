@@ -1,4 +1,4 @@
-"""The mandatory common 64^3 reconstruction geometry."""
+"""Physical xyz grids; model-specific restrictions belong to reconstructor adapters."""
 
 from __future__ import annotations
 
@@ -19,18 +19,24 @@ class GridGeometry:
     axis_order: str = AXIS_ORDER
 
     def __post_init__(self) -> None:
-        if tuple(self.shape) != GRID_SHAPE:
-            raise ValueError(f"all methods require grid shape {GRID_SHAPE}; got {self.shape}")
+        shape = np.asarray(self.shape)
+        if shape.shape != (3,) or shape.dtype.kind not in "iu" or np.any(shape < 1):
+            raise ValueError("shape must contain three positive integers")
         if self.axis_order != AXIS_ORDER:
-            raise ValueError(f"all methods require axis order {AXIS_ORDER!r}")
+            raise ValueError(f"axis order must be {AXIS_ORDER!r}")
         lower = np.asarray(self.lower_cm, dtype=float)
         upper = np.asarray(self.upper_cm, dtype=float)
-        if lower.shape != (3,) or upper.shape != (3,) or np.any(upper <= lower):
-            raise ValueError("lower_cm and upper_cm must be increasing xyz triples")
-        if not np.allclose(lower, GRID_LOWER_CM) or not np.allclose(upper, GRID_UPPER_CM):
-            raise ValueError(
-                f"frozen Mu-Net requires canonical bounds {GRID_LOWER_CM} to {GRID_UPPER_CM} cm"
-            )
+        if (
+            lower.shape != (3,)
+            or upper.shape != (3,)
+            or not np.isfinite(lower).all()
+            or not np.isfinite(upper).all()
+            or np.any(upper <= lower)
+        ):
+            raise ValueError("lower_cm and upper_cm must be finite increasing xyz triples")
+        object.__setattr__(self, "shape", tuple(int(x) for x in shape))
+        object.__setattr__(self, "lower_cm", tuple(float(x) for x in lower))
+        object.__setattr__(self, "upper_cm", tuple(float(x) for x in upper))
 
     @property
     def lower(self) -> np.ndarray:
@@ -112,3 +118,16 @@ class GridGeometry:
         indices = self.point_to_index(start[None, :] + mids[:, None] * delta[None, :])
         valid = np.all((indices >= 0) & (indices < np.asarray(self.shape)), axis=1) & (lengths > 0)
         return indices[valid], lengths[valid]
+
+
+def require_canonical_geometry(geometry: GridGeometry, method: str) -> None:
+    """Keep supported solver domains explicit while the grid type remains reusable."""
+    if (
+        geometry.shape != GRID_SHAPE
+        or geometry.lower_cm != GRID_LOWER_CM
+        or geometry.upper_cm != GRID_UPPER_CM
+    ):
+        raise ValueError(
+            f"{method} currently requires canonical 64^3 bounds "
+            f"{GRID_LOWER_CM} to {GRID_UPPER_CM} cm"
+        )

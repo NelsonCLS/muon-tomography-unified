@@ -121,3 +121,77 @@ def load_root_tracks(
         },
     )
     return tracks.subset(limit, seed)
+
+
+def load_root_detector_tracks(
+    path: str | Path,
+    *,
+    geometry: GridGeometry | None = None,
+    tree_name: str = "hits",
+    position_scale_cm_per_stored_unit: float = 0.1,
+    track_plane_lower_cm: float = TRACK_PLANE_LOWER_CM,
+    track_plane_upper_cm: float = TRACK_PLANE_UPPER_CM,
+    limit: int | None = None,
+    seed: int = 0,
+):
+    """Fit detector states from positions only; momentum branches are not read.
+
+    This legacy ROOT schema names its position branches ``*_truth``. This
+    adapter avoids simulated momentum but does not pretend those coordinates
+    are calibrated real detector measurements.
+    """
+    from ..types import DetectorTracks
+
+    try:
+        import uproot
+    except ImportError as exc:
+        raise RuntimeError("ROOT support requires uproot") from exc
+    branches = BRANCHES[:4]
+    source = str(Path(path).resolve())
+    with uproot.open(source) as root_file:
+        tree = root_file[tree_name]
+        missing = sorted(set(branches) - set(tree.keys()))
+        if missing:
+            raise ValueError(f"ROOT tree {tree_name!r} is missing branches: {missing}")
+        arr = tree.arrays(branches, library="np")
+    event = np.asarray(arr["eventNumber"]).reshape(-1)
+    positions = np.column_stack([arr[f"hitPosition{axis}_truth"] for axis in "XYZ"]).astype(float)
+    positions *= position_scale_cm_per_stored_unit
+    order = np.lexsort((positions[:, 2], event))
+    event, positions = event[order], positions[order]
+    starts = (
+        np.r_[0, np.flatnonzero(event[1:] != event[:-1]) + 1]
+        if len(event)
+        else np.array([], dtype=int)
+    )
+    ends = np.r_[starts[1:], len(event)] if len(event) else np.array([], dtype=int)
+    states, ids = [], []
+    for start, end in zip(starts, ends, strict=True):
+        hits = positions[start:end]
+        upper, lower = hits[hits[:, 2] > 0], hits[hits[:, 2] < 0]
+        if len(upper) < 2 or len(lower) < 2:
+            continue
+        upper_point, upper_dir = _fit_line(upper)
+        lower_point, lower_dir = _fit_line(lower)
+        incoming = _plane_intersection(upper_point, upper_dir, track_plane_upper_cm)
+        outgoing = _plane_intersection(lower_point, lower_dir, track_plane_lower_cm)
+        if incoming is not None and outgoing is not None:
+            states.append((outgoing, lower_dir, incoming, upper_dir))
+            ids.append(int(event[start]))
+    arrays = [np.asarray([row[i] for row in states], dtype=float).reshape(-1, 3) for i in range(4)]
+    legacy = TrackTable(
+        *arrays,
+        np.ones(len(ids)),
+        np.asarray(ids),
+        source,
+        {
+            "format": "muontruck_root_hits",
+            "tree": tree_name,
+            "detector_only": True,
+            "simulation_momentum_loaded": False,
+            "position_source": "legacy truth-named hit coordinates",
+            "events_seen": len(starts),
+            "events_reconstructed": len(ids),
+        },
+    ).subset(limit, seed)
+    return DetectorTracks.from_legacy(legacy)

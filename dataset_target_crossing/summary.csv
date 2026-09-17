@@ -1,0 +1,6 @@
+dataset,samples,mean_retained,minimum,maximum,retained_percent
+custom_object.tfrecord,1,14852.0,14852,14852,33.530500745021904
+voxels_prediction_funny.tfrecord,2,14921.0,14899,14943,33.69578717974775
+voxels_prediction_test.tfrecord,1608,14839.074626865671,9818,15319,33.5984843444568
+voxels_prediction_val.tfrecord,1608,14864.94776119403,13832,15341,33.60495002074684
+voxels_prediction.tfrecord,20000,14865.4028,13647,15399,33.60349076940512

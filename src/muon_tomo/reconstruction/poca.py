@@ -6,7 +6,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 
 from ..constants import HIGHLAND_CONSTANT_MEV, REFERENCE_MOMENTUM_MEV
-from ..geometry import GridGeometry
+from ..geometry import GridGeometry, require_canonical_geometry
 from ..types import ReconstructionResult, TrackTable
 from .common import (
     closest_approach,
@@ -31,6 +31,7 @@ class PoCAReconstructor:
         pooling_sigma_cm: float = 6.25,
     ) -> None:
         self.geometry = geometry or GridGeometry()
+        require_canonical_geometry(self.geometry, "poca")
         self.highland_constant_mev = float(highland_constant_mev)
         self.minimum_coverage = int(minimum_coverage)
         self.momentum_policy = momentum_policy
@@ -51,13 +52,15 @@ class PoCAReconstructor:
         exposure = np.zeros(n_voxels, dtype=np.float64)
         counts = np.zeros(n_voxels, dtype=np.int64)
         paths, path_lengths, _, _ = prepare_poca_paths(tracks, geometry)
-        incoming, incoming_dir, outgoing, outgoing_dir = physical_grid_intersections(tracks, geometry)
+        incoming, incoming_dir, outgoing, outgoing_dir = physical_grid_intersections(
+            tracks, geometry
+        )
         dtx, dty = tracks.projected_scattering_angles()
         momenta_mev, momentum_metadata = reconstruction_momenta(
             tracks, self.momentum_policy, self.average_momentum_mev
         )
         accepted = 0
-        for i, (indices, lengths) in enumerate(zip(paths, path_lengths)):
+        for i, (indices, lengths) in enumerate(zip(paths, path_lengths, strict=True)):
             if not len(indices):
                 continue
             coarse_indices = np.asarray(np.unravel_index(indices, geometry.shape)).T // factor
@@ -68,9 +71,11 @@ class PoCAReconstructor:
             if point is None or not bool(geometry.contains(point)):
                 continue
             flat = int(np.ravel_multi_index(geometry.point_to_index(point) // factor, coarse_shape))
-            sums[flat] += 0.5 * (dtx[i] ** 2 + dty[i] ** 2) * (
-                momenta_mev[i] / self.highland_constant_mev
-            ) ** 2
+            sums[flat] += (
+                0.5
+                * (dtx[i] ** 2 + dty[i] ** 2)
+                * (momenta_mev[i] / self.highland_constant_mev) ** 2
+            )
             counts[flat] += 1
             accepted += 1
 

@@ -5,11 +5,11 @@ from __future__ import annotations
 import numpy as np
 
 from ..constants import HIGHLAND_CONSTANT_MEV, REFERENCE_MOMENTUM_MEV
-from ..geometry import GridGeometry
+from ..geometry import GridGeometry, require_canonical_geometry
 from ..types import ReconstructionResult, TrackTable
 from .common import (
-    physical_grid_intersections,
     downstream_path_gaps,
+    physical_grid_intersections,
     prepare_paths,
     prepare_poca_paths,
     reconstruction_momenta,
@@ -42,6 +42,7 @@ class LikelihoodReconstructor:
         maximum_inverse_radiation_length_cm_inv: float = 20.0,
     ) -> None:
         self.geometry = geometry or GridGeometry()
+        require_canonical_geometry(self.geometry, "likelihood")
         self.iterations = int(iterations)
         self.reference_momentum_mev = float(reference_momentum_mev)
         self.highland_constant_mev = float(highland_constant_mev)

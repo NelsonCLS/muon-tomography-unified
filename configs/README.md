@@ -1,21 +1,23 @@
-# Configuration assets
+# Configuration
 
-- `default.yaml` defines the mandatory shared 64³ geometry and validated method
-  defaults. Classical reconstruction assigns every event the same fixed
-  1743.4601815051958 MeV inverse-square effective momentum prior and never uses
-  per-muon momentum magnitudes. Full-covariance likelihood uses physical
-  upper-to-lower ordering, grid-face observations, PoCA-kinked paths, ten
-  iterations, and the robust median update.
-- `funny-v4-robust-mlsd.calibration.json` is generated from funny record 0 and
-  includes held-out record-1 metrics. Likelihood fits covered-region means;
-  Mu-Net and PoCA fit eroded material medians. All maps target cm^-1 and are
-  bounded to the material truth range represented by funny.
-- `funny-v3-mean-momentum.calibration.json` and
-  `funny-v2-spatial.calibration.json` are historical angular-likelihood
-  calibrations retained for provenance. They are not compatible with the
-  corrected full-covariance estimator.
+`default.yaml` mirrors the packaged `src/muon_tomo/configs/default.yaml`; a test
+checks equality. `muon_tomo.config` owns typed configuration validation and merging.
+New run workflows save the fully resolved configuration alongside predictions.
 
-Calibration files are estimator-, geometry-, update-, iteration-, and
-momentum-policy-specific. Never apply an angular-likelihood calibration to a
-full-covariance result, or a per-track calibration to a fixed-prior result.
-Refit whenever any of those settings changes.
+Current production settings preserve the historical fixed inverse-square effective
+momentum 1743.4601815051958 MeV/c; this was derived from Funny 0 simulation. PoCA
+uses 32³ and σ=6.25 cm. MuNet uses frozen 1024-dosage weights and the assumed scalar
+feature. Likelihood stays the full-covariance median ten-iteration implementation.
+
+`scenes/` contains object/source inputs for the custom simulator; source
+kinetic-energy spectrum and reconstruction momentum prior are distinct settings.
+See `docs/custom_simulation.md` and `docs/scientific_contracts.md`.
+
+The three `funny-*.calibration.json` files are **historical truth-fitted artifacts**.
+They are retained for provenance, not applied by normal prediction. They are
+method/version/momentum-policy specific; do not use them to reproduce attractive
+old MSE values. New comparison outputs remain uncalibrated against truth.
+
+`munet.inference_seed: 0` controls stochastic placement in the new managed
+`predict` workflow; the legacy `reconstruct` command keeps its previous behavior.
+This is distinct from the track selection seed.

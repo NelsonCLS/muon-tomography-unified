@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-18",
+  "policy": "Sources copied byte-for-byte; original outputs/data untouched. These snapshots are not the managed prediction workflow.",
+  "recipes": [
+    {
+      "original": "outputs/poca-exposure-study/experiment.py",
+      "archived_source": "experiments/legacy_recipes/poca-exposure-study/experiment.py",
+      "sha256": "3f46032696743c0535ab6131e1a095d3f7a8c06996aedb8b5c068f8e6970e5a5",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/poca-exposure-study/finalize.py",
+      "archived_source": "experiments/legacy_recipes/poca-exposure-study/finalize.py",
+      "sha256": "7163318459149416094339954379c796b2ebb7e5d468a1984717554a942db4ed",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/poca-exposure-study/plot_exposure_only.py",
+      "archived_source": "experiments/legacy_recipes/poca-exposure-study/plot_exposure_only.py",
+      "sha256": "380e486f84e809c4fa7b182af2df52d4e797dd2f5f9c01dfeae75fa7dcf7e52a",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/poca-grid-sigma-study/run.py",
+      "archived_source": "experiments/legacy_recipes/poca-grid-sigma-study/run.py",
+      "sha256": "7cf0d63ce64b959d64ae80610a863574f1085c48938a0e56b360271e18a664e3",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/funny-track-composition/analyze.py",
+      "archived_source": "experiments/legacy_recipes/funny-track-composition/analyze.py",
+      "sha256": "6c8949d6652ecda84052df3ff8d58b7d52f3f421303448f563fcf24620c769f8",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/funny-target-crossing-comparison/run_comparison.py",
+      "archived_source": "experiments/legacy_recipes/funny-target-crossing-comparison/run_comparison.py",
+      "sha256": "4d6fffb1ff3e92f7501c5df8421ecd89a72301e478ff906a43dd9def463f98a0",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-audit/audit.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-audit/audit.py",
+      "sha256": "ca8a65457274e0db7a1076742d19f29b2c9c248e3621497493cb4ca65b38cdef",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-audit/algebra_check.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-audit/algebra_check.py",
+      "sha256": "5794d3b99070cc611f81a786a28aa3be2fc4df31a10328956bf3e587921fa1a3",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-audit/controlled_variants.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-audit/controlled_variants.py",
+      "sha256": "da1c9ceffe49b907f4c6a0c0e9699d3a6c5ea35f7ce43418ded0002545563d35",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-audit/path_audit.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-audit/path_audit.py",
+      "sha256": "65e81e8d5034d69725fa674254a0dc5c9572c773bc99996bd1a125c670159e72",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-development/study.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-development/study.py",
+      "sha256": "1511154ffd44c51082c715f27557c3ebb7523e377c54aa929c26b71fee860bf5",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/likelihood-development/validate_candidates.py",
+      "archived_source": "experiments/legacy_recipes/likelihood-development/validate_candidates.py",
+      "sha256": "c2e16af383aff80f5b3d54d33707f48d18cd6e8fa9bd7c2eb2dd5d2e51e4b56e",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/lead-block-25cm-8192/run_reconstruction.py",
+      "archived_source": "experiments/legacy_recipes/lead-block-25cm-8192/run_reconstruction.py",
+      "sha256": "fd904160142246d1b52131e754f33cf22b5ff49bb3a2168c7a8e9e9f5e4380d9",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/lead-block-25cm-8192/plot_cross_section.py",
+      "archived_source": "experiments/legacy_recipes/lead-block-25cm-8192/plot_cross_section.py",
+      "sha256": "41bf0b7e13c19fc5372ce6a34098b02910bb0f368405d6082dfab1d3a2e26a0e",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "outputs/lead-block-25cm-poca-grid-sigma/run.py",
+      "archived_source": "experiments/legacy_recipes/lead-block-25cm-poca-grid-sigma/run.py",
+      "sha256": "1b9a26c931742c75a440e4b11d7895e9ec23dee296865d7efa276b1f3ea9e8d3",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    },
+    {
+      "original": "dataset/generated_custom/filter_lead_block_8192.py",
+      "archived_source": "experiments/legacy_recipes/generated_custom/filter_lead_block_8192.py",
+      "sha256": "6f2d144c76c674dd3db9317ed1d1dadb2f7430685150417f641e410c7033d206",
+      "status": "historical reference; original relative/absolute paths retained; inspect before running"
+    }
+  ]
+}

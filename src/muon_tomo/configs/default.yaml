@@ -13,6 +13,8 @@ physics:
   average_momentum_mev: 1743.4601815051958
 
 munet:
+  # Applied by the managed predict workflow; legacy reconstruct behavior is preserved.
+  inference_seed: 0
   dosage: 1024
   weights: model_1024.weights.h5
   position_scale_cm: 100.0

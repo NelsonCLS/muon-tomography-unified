@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "historical index, not a benchmark rerun",
+  "reports": [
+    {
+      "path": "outputs/likelihood-development/CHECKPOINT_REPORT.md",
+      "present_at_indexing": true
+    },
+    {
+      "path": "experiments/likelihood_physics_study/REPORT.md",
+      "present_at_indexing": true
+    },
+    {
+      "path": "outputs/poca-grid-sigma-study/README.md",
+      "present_at_indexing": true
+    },
+    {
+      "path": "outputs/poca-exposure-study/README.md",
+      "present_at_indexing": true
+    },
+    {
+      "path": "outputs/funny-track-composition/report.md",
+      "present_at_indexing": true
+    },
+    {
+      "path": "outputs/funny-target-crossing-comparison/README.md",
+      "present_at_indexing": true
+    }
+  ]
+}

@@ -42,3 +42,23 @@ calibration/
 
 # Generated custom-object runs and their intermediate grids/CSV files
 dataset/generated_custom/
+
+# New managed storage (catalogues, docs and experiment source remain tracked)
+runs/
+data/raw/
+data/derived/
+data/cache/
+experiments/**/results/
+experiments/**/report.html
+experiments/**/REPORT.html
+benchmarks/results/
+
+# Legacy local datasets and saved sidecars; do not copy into version control
+dataset/**/*.npz
+dataset/**/*.npy
+dataset_target_crossing/**/*.npz
+dataset_target_crossing/**/*.npy
+
+# Large original-row maps / per-sample counts remain local data artifacts
+dataset_target_crossing/**/*.gz
+dataset_target_crossing/**/*.counts.csv

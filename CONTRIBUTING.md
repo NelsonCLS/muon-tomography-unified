@@ -1,58 +1,30 @@
 # Contributing
 
-Thank you for helping improve Muon Tomography Unified. Changes should preserve
-the common physical contract and remain reproducible from metadata.
+Read [AGENTS.md](AGENTS.md), [architecture](docs/architecture.md), and
+[scientific contracts](docs/scientific_contracts.md) before changing behavior.
+Use [testing](docs/testing.md) for setup and the relevant validation tier.
 
-## Development setup
+Keep structural changes separate from estimator/physics changes. A refactor must
+preserve selected inputs and numerical results, not just a headline MSE. New
+features belong behind explicit configuration and method/status metadata.
 
-Create an isolated environment from the repository root:
+The current defaults deliberately remain frozen: no truth-fitted calibration or
+per-object tuning in normal prediction. An external momentum prior and an assumed
+historical scalar are different scientific policies. Truth is evaluated only after
+predictions are fixed. Preserve model weights and source data.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e '.[all,dev]'
-```
+Use installed `muon_tomo` imports. New shared solvers belong in the package, explicit
+experimental variants in `muon_tomo.research`, and study runners in `experiments/`.
+Do not place new executable source inside output/data folders or add `sys.path`
+mutations. Old snapshots in `experiments/legacy_recipes/` are reference-only.
 
-Before submitting a change, run:
+Use registered dataset identities and fresh run directories. Do not commit large
+TFRecords/ROOT files, arrays, figures, generated presentations, environment folders,
+or credentials. Review small catalogues for machine-local paths before sharing.
 
-```bash
-ruff check src tests
-ruff format --check src tests
-pytest -q
-python -m build
-python -m twine check dist/*
-```
+Update the appropriate short documentation page and provenance manifest whenever
+behavior or storage changes; keep the root project summary a navigation index.
+Archive useful old reports without promoting them to current validation claims.
 
-The normal test suite does not require private datasets. Real-data integration
-tests are enabled only when their read-only input paths are supplied:
-
-```bash
-FUNNY_TFRECORD=/path/to/funny.tfrecord pytest -q tests/test_tfrecord_integration.py
-GEANT4_ROOT_SAMPLE=/path/to/sample.root pytest -q tests/test_root_integration.py
-```
-
-## Scientific changes
-
-Changes to geometry, units, track selection, momentum policy, calibration, or a
-reconstruction algorithm must include focused tests and updated provenance.
-Do not silently reuse calibration parameters after changing an estimator or
-its configuration. Keep the MuNet weights frozen unless a separate training
-project is explicitly introduced.
-
-Code under `src/muon_tomo/_vendor/` is preserved from the upstream MuNet
-implementation and is excluded from automatic formatting. Keep any necessary
-vendor modification minimal and document it in `NOTICE`.
-
-## Data and generated files
-
-Do not commit TFRecords, ROOT files, reconstructions, figures, local paths,
-credentials, or generated presentation workspaces. The repository's ignore
-rules cover the normal local locations, but contributors remain responsible
-for reviewing staged files before every commit.
-
-## Licensing
-
-Read `LICENSE` and `NOTICE` before redistributing this project. In particular,
-the licence for the adapted muonTruck material has not been confirmed, so a
-public redistribution requires permission or a compatible upstream licence.
+Read `LICENSE` and `NOTICE` before redistribution: integration and vendored MuNet
+licensing do not automatically resolve the original muonTruck-derived code's rights.

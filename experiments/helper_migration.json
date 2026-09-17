@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-18",
+  "changes": "Imports and placement only. Production algorithms unchanged.",
+  "modules": [
+    {
+      "old_path": "experiments/detector_only_likelihood/method.py",
+      "new_path": "src/muon_tomo/research/detector_only_likelihood/method.py",
+      "original_sha256": "8f849ab4aa0ec28812dc1fce385e780e1956fb5f4e38c2eea4ecf1958d899935",
+      "moved_sha256": "8f849ab4aa0ec28812dc1fce385e780e1956fb5f4e38c2eea4ecf1958d899935",
+      "function_and_class_ast_unchanged": true
+    },
+    {
+      "old_path": "experiments/detector_only_likelihood/spectrum_method.py",
+      "new_path": "src/muon_tomo/research/detector_only_likelihood/spectrum_method.py",
+      "original_sha256": "3f04465cc049dbdf89eafb45b09256c481b58a0df4abbf1069c32462c54cd941",
+      "moved_sha256": "3d87741208e495ddbb604518c35ee6a51a914cdfa355dc174ce545d3d287cb48",
+      "function_and_class_ast_unchanged": true
+    },
+    {
+      "old_path": "experiments/detector_only_likelihood/exposure_pooled_likelihood.py",
+      "new_path": "src/muon_tomo/research/detector_only_likelihood/exposure_pooled_likelihood.py",
+      "original_sha256": "903d2651149104089a88100affc67b40b6a49823d704d16b28a6f96f66e4e8b5",
+      "moved_sha256": "1d8e7d50b4b3f34325139c0d953dc712750a26ca84e5247125a69590bcd96add",
+      "function_and_class_ast_unchanged": true
+    },
+    {
+      "old_path": "experiments/detector_only_likelihood/all_methods_external.py",
+      "new_path": "src/muon_tomo/research/detector_only_likelihood/all_methods_external.py",
+      "original_sha256": "0f97543132f2b38bd87ded858cfd649d4a2fd67c243afbac1431e9435356aebb",
+      "moved_sha256": "abb1185bc8f948ea2d206d4bc9b58bedeb9f6357b352c6ae3daf4f0a97b8b8f5",
+      "function_and_class_ast_unchanged": true
+    },
+    {
+      "old_path": "experiments/likelihood_physics_study/core.py",
+      "new_path": "src/muon_tomo/research/likelihood_physics_study/core.py",
+      "original_sha256": "3486fda0ee1c41b4d3d8a3e244900e72a4b3ca13b1365408aa8b10926a35cf0d",
+      "moved_sha256": "e2cc9c114af338c5a4ec3a05c410b82f88d96447e20b0a4600a2126366dd1296",
+      "function_and_class_ast_unchanged": true
+    }
+  ]
+}

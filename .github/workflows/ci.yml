@@ -8,32 +8,54 @@ on:
 permissions:
   contents: read
 
+env:
+  MPLBACKEND: Agg
+
 jobs:
   test:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.13"]
-
+        include:
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.13"
+          - os: macos-latest
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-      - name: Install test dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e ".[test,plot,dev]"
+      - name: Install portable test dependencies
+        run: python -m pip install -e ".[test,plot,dev]"
       - name: Lint
         run: ruff check src tests
       - name: Check formatting
         run: ruff format --check src tests
-      - name: Run portable tests
-        run: pytest -q
+      - name: Portable and synthetic research tests
+        run: python -m pytest -q
+
+  tfrecord:
+    name: Synthetic TensorFlow adapters / Python 3.13
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install adapter dependencies
+        run: python -m pip install -e ".[test,plot,tfrecord]"
+      - name: Check synthetic data round trips and no-truth workflow
+        run: python -m pytest -q tests/test_simulation.py tests/test_data_contracts.py tests/test_workflow_config.py
 
   package:
-    name: Build package
+    name: Build and install wheel outside checkout
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,8 +64,16 @@ jobs:
           python-version: "3.13"
           cache: pip
       - name: Install build tools
-        run: python -m pip install --upgrade pip && python -m pip install build twine
+        run: python -m pip install "build>=1.2,<2" "twine>=6,<7"
       - name: Build distributions
         run: python -m build
       - name: Validate distributions
         run: python -m twine check dist/*
+      - name: Install built wheel
+        run: python -m pip install dist/*.whl
+      - name: Exercise installed entry point and packaged resources
+        working-directory: ${{ runner.temp }}
+        run: |
+          muon-tomo --help
+          muon-tomo predict --help
+          python -c "from importlib.resources import files; p=files('muon_tomo'); assert (p/'configs/default.yaml').is_file(); assert (p/'_vendor/munet/weights/model_1024.weights.h5').is_file(); assert (p/'simulation/geant4/main.cc').is_file()"

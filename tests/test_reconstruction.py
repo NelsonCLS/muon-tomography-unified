@@ -27,10 +27,16 @@ def test_poca_normalizes_by_all_path_exposure(monkeypatch, synthetic_tracks):
     tracks = synthetic_tracks.subset(2)
     geometry = GridGeometry()
     flat = np.ravel_multi_index((32, 32, 32), geometry.shape)
-    monkeypatch.setattr(module, "prepare_poca_paths", lambda *args: (
-        [np.array([flat]), np.array([flat])],
-        [np.array([2.0]), np.array([6.0])], None, 1,
-    ))
+    monkeypatch.setattr(
+        module,
+        "prepare_poca_paths",
+        lambda *args: (
+            [np.array([flat]), np.array([flat])],
+            [np.array([2.0]), np.array([6.0])],
+            None,
+            1,
+        ),
+    )
     points = iter([np.array([0.1, 0.1, 0.1]), None])
     monkeypatch.setattr(module, "closest_approach", lambda *args: next(points))
     result = PoCAReconstructor(pooling_sigma_cm=0).reconstruct(tracks)
@@ -46,13 +52,20 @@ def test_poca_pooling_preserves_constant_signal_per_exposure(monkeypatch, synthe
     tracks = synthetic_tracks.subset(2)
     geometry = GridGeometry()
     flat = np.ravel_multi_index((32, 32, 32), geometry.shape)
-    monkeypatch.setattr(module, "prepare_poca_paths", lambda *args: (
-        [np.array([flat])] * 2, [np.array([4.0])] * 2, None, 2,
-    ))
+    monkeypatch.setattr(
+        module,
+        "prepare_poca_paths",
+        lambda *args: (
+            [np.array([flat])] * 2,
+            [np.array([4.0])] * 2,
+            None,
+            2,
+        ),
+    )
     monkeypatch.setattr(module, "closest_approach", lambda *args: np.array([0.1, 0.1, 0.1]))
     result = PoCAReconstructor().reconstruct(tracks)
     tx, ty = tracks.projected_scattering_angles()
-    expected = np.sum(0.5 * (tx ** 2 + ty ** 2) * (3000 / 15) ** 2) / 8
+    expected = np.sum(0.5 * (tx**2 + ty**2) * (3000 / 15) ** 2) / 8
     np.testing.assert_allclose(result.raw_estimator[result.valid_mask], expected)
 
 

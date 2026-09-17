@@ -32,6 +32,8 @@ dependencies = [
 
 [project.optional-dependencies]
 munet = ["tensorflow>=2.18,<2.22"]
+tfrecord = ["tensorflow>=2.18,<2.22"]
+research = ["markdown-it-py>=3,<5"]
 plot = ["matplotlib>=3.9,<4", "plotly>=5.24,<7"]
 test = ["pytest>=8,<10", "pytest-cov>=5,<8"]
 dev = ["build>=1.2,<2", "ruff>=0.12,<1", "twine>=6,<7"]
@@ -54,13 +56,17 @@ muon_tomo = ["configs/*.yaml", "simulation/geant4/*.cc", "simulation/geant4/CMak
 "muon_tomo._vendor.munet" = ["weights/*.h5"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "experiments/detector_only_likelihood/test_method.py", "experiments/likelihood_physics_study/test_core.py", "experiments/likelihood_physics_study/test_provenance.py"]
+markers = [
+  "integration: optional real-data or external-runtime integration",
+  "research: synthetic checks for experimental algorithms",
+]
 addopts = "-ra"
 
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-extend-exclude = ["src/muon_tomo/_vendor"]
+extend-exclude = ["src/muon_tomo/_vendor", "src/muon_tomo/research"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP", "B", "RUF"]

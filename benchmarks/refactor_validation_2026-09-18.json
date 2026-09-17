@@ -1,0 +1,574 @@
+{
+  "schema_version": 1,
+  "date_local": "2026-09-18",
+  "baseline_git_commit": "30c67e2",
+  "work_started_utc": "2026-09-17T19:54:38Z",
+  "deadline_utc": "2026-09-17T20:54:38Z",
+  "test_suite": {
+    "passed": 147,
+    "skipped": 0,
+    "failed": 0,
+    "seconds": 11.85,
+    "warnings": 10,
+    "warning_source": "existing TensorFlow/gast Python deprecations",
+    "included": "portable, research gradients/cache, real Funny TFRecord/MuNet, real ROOT, native seeded Geant4"
+  },
+  "lint_and_format": "passed;71 files formatted/verified; frozen vendor and research numerical code excluded",
+  "public_cli_workflows": [
+    {
+      "workflow": "help",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "--help"
+      ],
+      "seconds": 0.23,
+      "exit_code": 0
+    },
+    {
+      "workflow": "create_voxels",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "create-voxels",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/scene.json",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/voxels.npz"
+      ],
+      "seconds": 0.23,
+      "exit_code": 0
+    },
+    {
+      "workflow": "pack_simulation",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "pack-simulation",
+        "--csv",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/tracks.csv",
+        "--voxels",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/voxels.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord"
+      ],
+      "seconds": 10.101,
+      "exit_code": 0
+    },
+    {
+      "workflow": "inspect",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "inspect",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/inspect.json"
+      ],
+      "seconds": 1.709,
+      "exit_code": 0
+    },
+    {
+      "workflow": "truth",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "truth",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/truth.npz"
+      ],
+      "seconds": 1.617,
+      "exit_code": 0
+    },
+    {
+      "workflow": "reconstruct_all",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "reconstruct",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--method",
+        "all",
+        "--limit",
+        "1024",
+        "--output-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy"
+      ],
+      "seconds": 5.84,
+      "exit_code": 0
+    },
+    {
+      "workflow": "compare",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "compare",
+        "--truth",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/truth.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_munet.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_likelihood.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/comparison.json"
+      ],
+      "seconds": 0.25,
+      "exit_code": 0
+    },
+    {
+      "workflow": "validate",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "validate",
+        "--truth",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/truth.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_munet.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_likelihood.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/validation.json"
+      ],
+      "seconds": 0.288,
+      "exit_code": 0
+    },
+    {
+      "workflow": "plot",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "plot",
+        "--truth",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/truth.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_munet.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_likelihood.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/section.png"
+      ],
+      "seconds": 0.68,
+      "exit_code": 0
+    },
+    {
+      "workflow": "plot3d",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "plot3d",
+        "--truth",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/truth.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_munet.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_likelihood.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/viewer.html"
+      ],
+      "seconds": 0.404,
+      "exit_code": 0
+    },
+    {
+      "workflow": "single_plot_no_truth",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "plot",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/poca.png"
+      ],
+      "seconds": 0.483,
+      "exit_code": 0
+    },
+    {
+      "workflow": "single_viewer_no_truth",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "plot3d",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/legacy/record_0_poca.npz",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/poca.html"
+      ],
+      "seconds": 0.357,
+      "exit_code": 0
+    },
+    {
+      "workflow": "stability",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "stability",
+        "--dataset",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--limit",
+        "1024",
+        "--iterations",
+        "1",
+        "--output-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/stability"
+      ],
+      "seconds": 8.509,
+      "exit_code": 0
+    },
+    {
+      "workflow": "dataset_register",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "dataset",
+        "register",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--id",
+        "smoke-synthetic",
+        "--kind",
+        "simulated",
+        "--catalog",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/datasets.json"
+      ],
+      "seconds": 0.233,
+      "exit_code": 0
+    },
+    {
+      "workflow": "dataset_list",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "dataset",
+        "list",
+        "--catalog",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/datasets.json"
+      ],
+      "seconds": 0.219,
+      "exit_code": 0
+    },
+    {
+      "workflow": "predict_all",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "predict",
+        "--input",
+        "smoke-synthetic",
+        "--limit",
+        "1024",
+        "--catalog",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/datasets.json",
+        "--runs-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/runs"
+      ],
+      "seconds": 6.179,
+      "exit_code": 0
+    },
+    {
+      "workflow": "predict_no_truth",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "predict",
+        "--input",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/synthetic.tfrecord",
+        "--method",
+        "poca",
+        "--no-truth",
+        "--runs-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/runs"
+      ],
+      "seconds": 2.084,
+      "exit_code": 0
+    },
+    {
+      "workflow": "run_list",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "run",
+        "list",
+        "--runs-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/runs"
+      ],
+      "seconds": 0.221,
+      "exit_code": 0
+    },
+    {
+      "workflow": "predict_real",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "predict",
+        "--input",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_funny.tfrecord",
+        "--limit",
+        "8192",
+        "--runs-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/real-runs"
+      ],
+      "seconds": 14.364,
+      "exit_code": 0
+    },
+    {
+      "workflow": "generate_dataset",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "generate-dataset",
+        "--scene",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/scene.json",
+        "--output",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/generated.tfrecord",
+        "--source-config",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/vertical.json",
+        "--executable",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/build/geant4/muon_tomo_sim",
+        "--events",
+        "32",
+        "--seed",
+        "47"
+      ],
+      "seconds": 3.102,
+      "exit_code": 0
+    },
+    {
+      "workflow": "predict_generated",
+      "command": [
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/.venv/bin/python",
+        "-m",
+        "muon_tomo.cli",
+        "predict",
+        "--input",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/generated.tfrecord",
+        "--method",
+        "poca",
+        "--runs-dir",
+        "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/outputs/refactor-validation/cli-workflows/generated-runs"
+      ],
+      "seconds": 2.018,
+      "exit_code": 0
+    }
+  ],
+  "numerical_parity": [
+    {
+      "sample": "funny",
+      "selected_tracks": 8192,
+      "selection_seed": 0,
+      "classical_methods": [
+        {
+          "method": "poca",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        },
+        {
+          "method": "likelihood",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        }
+      ],
+      "munet": {
+        "inference_seed": 0,
+        "primary_density_byte_exact": true,
+        "max_abs_difference": 0.0,
+        "primary_array_sha256": "c9df012b6e5bd8dd1d8ac2c48acf243b9b94e78c3bcef7e2fbd3e2258c2feb44"
+      }
+    },
+    {
+      "sample": "filtered",
+      "selected_tracks": 8192,
+      "selection_seed": 0,
+      "classical_methods": [
+        {
+          "method": "poca",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        },
+        {
+          "method": "likelihood",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        }
+      ],
+      "munet": {
+        "inference_seed": 0,
+        "primary_density_byte_exact": true,
+        "max_abs_difference": 0.0,
+        "primary_array_sha256": "6f9910a29caf7fc04e6785fc3d388b7a3c0b8e81097ad984497d97c8149c1995"
+      }
+    },
+    {
+      "sample": "lead",
+      "selected_tracks": 8192,
+      "selection_seed": 0,
+      "classical_methods": [
+        {
+          "method": "poca",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        },
+        {
+          "method": "likelihood",
+          "fields": {
+            "inverse_radiation_length_cm_inv": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "raw_estimator": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "occupancy_count": {
+              "exact": true,
+              "max_abs": 0.0
+            },
+            "valid_mask": {
+              "exact": true,
+              "max_abs": 0.0
+            }
+          }
+        }
+      ],
+      "munet": {
+        "inference_seed": 0,
+        "primary_density_byte_exact": true,
+        "max_abs_difference": 0.0,
+        "primary_array_sha256": "633682bc05d5d899e6b95300021a3ab1c729121fad175b9e9c5726fa8746e80c"
+      }
+    }
+  ],
+  "production_reconstruct_ast_unchanged_except_zip_strict_assertion": {
+    "munet": true,
+    "poca": true,
+    "likelihood": true
+  },
+  "frozen_weight_hashes_match_baseline": {
+    "src/muon_tomo/_vendor/munet/weights/model_512.weights.h5": true,
+    "src/muon_tomo/_vendor/munet/weights/model_1024.weights.h5": true
+  },
+  "registered_dataset_size_mtime_unchanged": {
+    "legacy-custom": true,
+    "legacy-main": true,
+    "legacy-funny": true,
+    "legacy-test": true,
+    "legacy-validation": true,
+    "legacy-custom-target-crossing": true,
+    "legacy-main-target-crossing": true,
+    "legacy-funny-target-crossing": true,
+    "legacy-test-target-crossing": true,
+    "legacy-validation-target-crossing": true,
+    "sim-examples": true,
+    "sim-lead-block-25cm-raw": true,
+    "sim-lead-block-25cm-filtered-8192": true
+  },
+  "additional_checks": {
+    "detector_npz_all_methods_no_truth": "passed,1024 measured tracks",
+    "root_positions_only_likelihood": "passed,64 source event IDs",
+    "filtering": "1024->1024 control;1034->1024 with10 known misses;labels/source bytes unchanged",
+    "experimental_wrapper": "finite64^3 cm^-1 output on6 synthetic tracks",
+    "installed_wheel": "see package_smoke_2026-09-18.json",
+    "cross_section_visual_review": "completed;material legend issue corrected",
+    "source_portability": "supported package has no user-home paths or sys.path modifications;Docs->docs Git rename recorded"
+  },
+  "scope_limits": [
+    "Remote CI and CUDA/Linux execution were not run locally.",
+    "No full53.99GB data scan, new training, or long optimization study was run.",
+    "Input preservation checked from operations and registered size/mtime, not full input rehashes.",
+    "Historical research recipes remain explicit references; managed prediction is the supported common workflow."
+  ],
+  "munet_repeatability_note": "Unseeded old/new inference differed because the unchanged vendor PoCA layer randomly places unscattered tracks. With tf.random.set_seed(0), all three cases are byte-identical. New predict records this seed; legacy reconstruct preserves old behavior."
+}

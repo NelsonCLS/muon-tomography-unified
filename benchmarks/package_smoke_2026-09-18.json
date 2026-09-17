@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-18",
+  "distribution_validation": "wheel and sdist built; twine check passed",
+  "built_artifacts": [
+    {
+      "path": "/private/tmp/muon-refactor-dist-20260918-final/muon_tomography_unified-0.1.0.tar.gz",
+      "sha256": "ba5d5a90e4cca3376557ef43fbec9907c2334642a75125dda6f818e0b3431071",
+      "size_bytes": 25823899
+    },
+    {
+      "path": "/private/tmp/muon-refactor-dist-20260918-final/muon_tomography_unified-0.1.0-py3-none-any.whl",
+      "sha256": "4a93561504e525ca38296a7f975a3e6bd098479b8d3af4ad8f2bdf88d6a4d218",
+      "size_bytes": 25697953
+    }
+  ],
+  "installed_wheel_smoke": {
+    "environment": "temporary virtualenv; existing scientific dependencies reused without editable project hook",
+    "imported_package": "/private/tmp/muon-refactor-wheel-env/lib/python3.13/site-packages/muon_tomo/__init__.py",
+    "working_directory": "/private/tmp",
+    "input": "Funny 0 original dataset, 32 selected rows",
+    "method": "poca",
+    "truth_requested": false,
+    "run_path": "/private/tmp/muon-refactor-wheel-predictions/20260917T201501Z-ba6d27cc59",
+    "status": "completed; raw arrays, metrics availability record, PNG and HTML verified",
+    "scope": "Packaging/runtime smoke only, not a scientific benchmark; wheel snapshot predates final documentation/source-manifest edits"
+  },
+  "source_distribution_checks": {
+    "lowercase_docs": true,
+    "configured_research_tests_included": true,
+    "generated_research_results_excluded": true,
+    "model_weights_included": true
+  },
+  "remote_ci_run": false,
+  "final_reviewed_source_smoke": {
+    "working_directory": "/private/tmp",
+    "run_path": "/private/tmp/muon-refactor-final-wheel-runs/20260917T202552Z-53845143b8",
+    "selected_tracks": 8192,
+    "methods": [
+      "munet",
+      "poca",
+      "likelihood"
+    ],
+    "truth_requested": true,
+    "status": "completed",
+    "source_sha256": "184e385eb83c3d1b20d35c55033f9639888cbdd5f0cb277aa40bec4eb55fff6c",
+    "primary_density_parity_to_pre_refactor": {
+      "munet": {
+        "byte_exact": true,
+        "max_abs": 0.0
+      },
+      "poca": {
+        "byte_exact": true,
+        "max_abs": 0.0
+      },
+      "likelihood": {
+        "byte_exact": true,
+        "max_abs": 0.0
+      }
+    },
+    "wheel_import_path": "/private/tmp/muon-refactor-wheel-env/lib/python3.13/site-packages/muon_tomo/__init__.py",
+    "package_build_validation": "wheel and sdist; twine passed",
+    "distributions": [
+      {
+        "path": "/private/tmp/muon-refactor-final-distributions/muon_tomography_unified-0.1.0.tar.gz",
+        "size_bytes": 25826370,
+        "sha256": "77c5184ccbfaf5b0b949b1761ef09bff4fec262961998ac1b8f8f047962e7998"
+      },
+      {
+        "path": "/private/tmp/muon-refactor-final-distributions/muon_tomography_unified-0.1.0-py3-none-any.whl",
+        "size_bytes": 25698696,
+        "sha256": "1d8f61845c1369abc977354c1ebf66743f71777a41ad7d37dd807de6ea124647"
+      }
+    ]
+  }
+}

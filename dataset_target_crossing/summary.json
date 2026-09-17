@@ -1,0 +1,216 @@
+{
+  "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+  "bounds_cm": [
+    -50,
+    50
+  ],
+  "datasets": [
+    {
+      "source": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/custom_object.tfrecord",
+      "output": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset_target_crossing/custom_object.tfrecord",
+      "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+      "source_snapshot": {
+        "size_bytes": 2503594,
+        "mtime_ns": 1779199091417256355,
+        "inode": 128918653
+      },
+      "samples": 1,
+      "total_input_tracks": 44294,
+      "total_retained_tracks": 14852,
+      "mean_retained_tracks_per_sample": 14852.0,
+      "min_retained_tracks_per_sample": 14852,
+      "max_retained_tracks_per_sample": 14852,
+      "retained_fraction": 0.335305007450219,
+      "empty_samples": 0,
+      "invalid_geometry_tracks": 0,
+      "output_bytes": 901850,
+      "elapsed_seconds": 0.06162833399139345,
+      "verification": {
+        "samples_verified": 1,
+        "tracks_verified": 14852,
+        "serialized_records_match": true,
+        "truth_payloads_unchanged": true,
+        "all_tracks_cross_cube": true,
+        "provenance_indices_verified": true
+      },
+      "original_source_unchanged": true,
+      "complete": true
+    },
+    {
+      "source": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_funny.tfrecord",
+      "output": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset_target_crossing/voxels_prediction_funny.tfrecord",
+      "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+      "source_snapshot": {
+        "size_bytes": 5372706,
+        "mtime_ns": 1703321890000000000,
+        "inode": 128918654
+      },
+      "samples": 2,
+      "total_input_tracks": 88563,
+      "total_retained_tracks": 29842,
+      "mean_retained_tracks_per_sample": 14921.0,
+      "min_retained_tracks_per_sample": 14899,
+      "max_retained_tracks_per_sample": 14943,
+      "retained_fraction": 0.3369578717974775,
+      "empty_samples": 0,
+      "invalid_geometry_tracks": 0,
+      "output_bytes": 1955988,
+      "elapsed_seconds": 0.08732541697099805,
+      "verification": {
+        "samples_verified": 2,
+        "tracks_verified": 29842,
+        "serialized_records_match": true,
+        "truth_payloads_unchanged": true,
+        "all_tracks_cross_cube": true,
+        "provenance_indices_verified": true
+      },
+      "original_source_unchanged": true,
+      "complete": true
+    },
+    {
+      "source": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_test.tfrecord",
+      "output": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset_target_crossing/voxels_prediction_test.tfrecord",
+      "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+      "source_snapshot": {
+        "size_bytes": 4333704971,
+        "mtime_ns": 1703321890000000000,
+        "inode": 128918657
+      },
+      "samples": 1608,
+      "total_input_tracks": 71018775,
+      "total_retained_tracks": 23861232,
+      "mean_retained_tracks_per_sample": 14839.074626865671,
+      "min_retained_tracks_per_sample": 9818,
+      "max_retained_tracks_per_sample": 15319,
+      "retained_fraction": 0.335984843444568,
+      "empty_samples": 0,
+      "invalid_geometry_tracks": 0,
+      "output_bytes": 1609223605,
+      "elapsed_seconds": 37.69619512488134,
+      "verification": {
+        "samples_verified": 1608,
+        "tracks_verified": 23861232,
+        "serialized_records_match": true,
+        "truth_payloads_unchanged": true,
+        "all_tracks_cross_cube": true,
+        "provenance_indices_verified": true
+      },
+      "original_source_unchanged": true,
+      "complete": true
+    },
+    {
+      "source": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_val.tfrecord",
+      "output": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset_target_crossing/voxels_prediction_val.tfrecord",
+      "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+      "source_snapshot": {
+        "size_bytes": 4340307317,
+        "mtime_ns": 1703322342000000000,
+        "inode": 128918656
+      },
+      "samples": 1608,
+      "total_input_tracks": 71128914,
+      "total_retained_tracks": 23902836,
+      "mean_retained_tracks_per_sample": 14864.94776119403,
+      "min_retained_tracks_per_sample": 13832,
+      "max_retained_tracks_per_sample": 15341,
+      "retained_fraction": 0.3360495002074684,
+      "empty_samples": 0,
+      "invalid_geometry_tracks": 0,
+      "output_bytes": 1611841205,
+      "elapsed_seconds": 37.94822591706179,
+      "verification": {
+        "samples_verified": 1608,
+        "tracks_verified": 23902836,
+        "serialized_records_match": true,
+        "truth_payloads_unchanged": true,
+        "all_tracks_cross_cube": true,
+        "provenance_indices_verified": true
+      },
+      "original_source_unchanged": true,
+      "complete": true
+    },
+    {
+      "source": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction.tfrecord",
+      "output": "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset_target_crossing/voxels_prediction.tfrecord",
+      "algorithm": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1",
+      "source_snapshot": {
+        "size_bytes": 53987661706,
+        "mtime_ns": 1703315908000000000,
+        "inode": 128918652
+      },
+      "samples": 20000,
+      "total_input_tracks": 884753486,
+      "total_retained_tracks": 297308056,
+      "mean_retained_tracks_per_sample": 14865.4028,
+      "min_retained_tracks_per_sample": 13647,
+      "max_retained_tracks_per_sample": 15399,
+      "retained_fraction": 0.3360349076940512,
+      "empty_samples": 0,
+      "invalid_geometry_tracks": 0,
+      "output_bytes": 20049530189,
+      "elapsed_seconds": 475.03920450014994,
+      "verification": {
+        "samples_verified": 20000,
+        "tracks_verified": 297308056,
+        "serialized_records_match": true,
+        "truth_payloads_unchanged": true,
+        "all_tracks_cross_cube": true,
+        "provenance_indices_verified": true
+      },
+      "original_source_unchanged": true,
+      "complete": true
+    }
+  ],
+  "geometry_checks": [
+    {
+      "dataset": "custom_object.tfrecord",
+      "input_tracks": 44294,
+      "retained": 14852,
+      "matches_production_geometry": true,
+      "unchanged_truth": true
+    },
+    {
+      "dataset": "voxels_prediction_funny.tfrecord",
+      "input_tracks": 44240,
+      "retained": 14943,
+      "matches_production_geometry": true,
+      "unchanged_truth": true
+    },
+    {
+      "dataset": "voxels_prediction_test.tfrecord",
+      "input_tracks": 44488,
+      "retained": 14968,
+      "matches_production_geometry": true,
+      "unchanged_truth": true
+    },
+    {
+      "dataset": "voxels_prediction_val.tfrecord",
+      "input_tracks": 44496,
+      "retained": 15050,
+      "matches_production_geometry": true,
+      "unchanged_truth": true
+    },
+    {
+      "dataset": "voxels_prediction.tfrecord",
+      "input_tracks": 44660,
+      "retained": 15096,
+      "matches_production_geometry": true,
+      "unchanged_truth": true
+    }
+  ],
+  "selection_information": "Positions and normalized directions only. No truth, momentum magnitude, RPC coincidence, or top-bottom-only cut.",
+  "definition": "Nonzero cube path: entry-PoCA-exit when PoCA is inside, otherwise straight segment between fitted z-face endpoints. Includes side crossings. This is an inferred path, not stored transport truth.",
+  "source_files": [
+    "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/custom_object.tfrecord",
+    "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_funny.tfrecord",
+    "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_test.tfrecord",
+    "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction_val.tfrecord",
+    "/Users/longsangchan/MuonTomo_local/muon-tomography-unified-main/dataset/voxels_prediction.tfrecord"
+  ],
+  "all_datasets_complete": true,
+  "total_samples": 23219,
+  "total_retained_tracks": 345116818,
+  "pooled_mean_retained_tracks_per_sample": 14863.552177096344,
+  "pooled_min_retained_tracks_per_sample": 9818,
+  "pooled_max_retained_tracks_per_sample": 15399
+}

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from ..constants import MUNET_POSITION_OFFSET, MUNET_POSITION_SCALE_CM
-from ..geometry import GridGeometry
+from ..geometry import GridGeometry, require_canonical_geometry
 from ..types import ReconstructionResult, TrackTable
 from .common import path_occupancy
 
@@ -28,6 +28,7 @@ class MuNetReconstructor:
         max_chunks: int | None = None,
     ) -> None:
         self.geometry = geometry or GridGeometry()
+        require_canonical_geometry(self.geometry, "munet")
         if dosage not in {512, 1024}:
             raise ValueError("frozen Mu-Net supports dosage 512 or 1024")
         self.dosage = dosage

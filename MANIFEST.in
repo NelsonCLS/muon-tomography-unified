@@ -7,3 +7,17 @@ recursive-include third_party *.sha256 *LICENSE
 
 recursive-include docs *.md
 recursive-include src/muon_tomo/simulation/geant4 *.cc CMakeLists.txt
+
+include AGENTS.md
+include project_summary.md
+recursive-include environments *.md *.txt *.json
+recursive-include benchmarks *.md *.json
+
+# Include explicit research tests/runners, never generated study caches.
+include experiments/README.md
+include experiments/helper_migration.json
+include experiments/detector_only_likelihood/*.py
+include experiments/detector_only_likelihood/*.md
+include experiments/likelihood_physics_study/*.py
+include experiments/likelihood_physics_study/*.md
+recursive-include experiments/legacy_recipes *.py *.md *.json

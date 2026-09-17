@@ -1,0 +1,268 @@
+{
+  "datasets": [
+    {
+      "dataset_id": "legacy-custom",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "imported",
+      "metadata": {
+        "format": "tfrecord_xy_gzip",
+        "geometry": "canonical_xyz_64",
+        "mean_stored_tracks_per_sample": 44294.0,
+        "samples": 1,
+        "source_generation": "legacy_mu_net_import",
+        "source_spectrum": "see docs/scientific_contracts.md and docs/archive/project_summary_2026-09-09.md; not current generator",
+        "total_stored_tracks": 44294
+      },
+      "mtime_ns_at_registration": 1779199091417256355,
+      "parent_id": null,
+      "path": "dataset/custom_object.tfrecord",
+      "sha256": null,
+      "size_bytes": 2503594,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-main",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "imported",
+      "metadata": {
+        "format": "tfrecord_xy_gzip",
+        "geometry": "canonical_xyz_64",
+        "mean_stored_tracks_per_sample": 44237.6743,
+        "samples": 20000,
+        "source_generation": "legacy_mu_net_import",
+        "source_spectrum": "see docs/scientific_contracts.md and docs/archive/project_summary_2026-09-09.md; not current generator",
+        "total_stored_tracks": 884753486
+      },
+      "mtime_ns_at_registration": 1703315908000000000,
+      "parent_id": null,
+      "path": "dataset/voxels_prediction.tfrecord",
+      "sha256": null,
+      "size_bytes": 53987661706,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-funny",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "imported",
+      "metadata": {
+        "format": "tfrecord_xy_gzip",
+        "geometry": "canonical_xyz_64",
+        "mean_stored_tracks_per_sample": 44281.5,
+        "samples": 2,
+        "source_generation": "legacy_mu_net_import",
+        "source_spectrum": "see docs/scientific_contracts.md and docs/archive/project_summary_2026-09-09.md; not current generator",
+        "total_stored_tracks": 88563
+      },
+      "mtime_ns_at_registration": 1703321890000000000,
+      "parent_id": null,
+      "path": "dataset/voxels_prediction_funny.tfrecord",
+      "sha256": null,
+      "size_bytes": 5372706,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-test",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "imported",
+      "metadata": {
+        "format": "tfrecord_xy_gzip",
+        "geometry": "canonical_xyz_64",
+        "mean_stored_tracks_per_sample": 44165.90485074627,
+        "samples": 1608,
+        "source_generation": "legacy_mu_net_import",
+        "source_spectrum": "see docs/scientific_contracts.md and docs/archive/project_summary_2026-09-09.md; not current generator",
+        "total_stored_tracks": 71018775
+      },
+      "mtime_ns_at_registration": 1703321890000000000,
+      "parent_id": null,
+      "path": "dataset/voxels_prediction_test.tfrecord",
+      "sha256": null,
+      "size_bytes": 4333704971,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-validation",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "imported",
+      "metadata": {
+        "format": "tfrecord_xy_gzip",
+        "geometry": "canonical_xyz_64",
+        "mean_stored_tracks_per_sample": 44234.399253731346,
+        "samples": 1608,
+        "source_generation": "legacy_mu_net_import",
+        "source_spectrum": "see docs/scientific_contracts.md and docs/archive/project_summary_2026-09-09.md; not current generator",
+        "total_stored_tracks": 71128914
+      },
+      "mtime_ns_at_registration": 1703322342000000000,
+      "parent_id": null,
+      "path": "dataset/voxels_prediction_val.tfrecord",
+      "sha256": null,
+      "size_bytes": 4340307317,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-custom-target-crossing",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_stored_rows_not_equal_acquisition_time",
+        "format": "tfrecord_xy_gzip",
+        "max_retained_tracks_per_sample": 14852,
+        "mean_retained_tracks_per_sample": 14852.0,
+        "min_retained_tracks_per_sample": 14852,
+        "original_rows": "dataset_target_crossing/custom_object.original_indices.u32.gz",
+        "samples": 1,
+        "summary": "dataset_target_crossing/custom_object.summary.json",
+        "total_input_tracks": 44294,
+        "total_retained_tracks": 14852,
+        "transformation": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1"
+      },
+      "mtime_ns_at_registration": 1789187037438143208,
+      "parent_id": "legacy-custom",
+      "path": "dataset_target_crossing/custom_object.tfrecord",
+      "sha256": null,
+      "size_bytes": 901850,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-main-target-crossing",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_stored_rows_not_equal_acquisition_time",
+        "format": "tfrecord_xy_gzip",
+        "max_retained_tracks_per_sample": 15399,
+        "mean_retained_tracks_per_sample": 14865.4028,
+        "min_retained_tracks_per_sample": 13647,
+        "original_rows": "dataset_target_crossing/voxels_prediction.original_indices.u32.gz",
+        "samples": 20000,
+        "summary": "dataset_target_crossing/voxels_prediction.summary.json",
+        "total_input_tracks": 884753486,
+        "total_retained_tracks": 297308056,
+        "transformation": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1"
+      },
+      "mtime_ns_at_registration": 1789187488906562474,
+      "parent_id": "legacy-main",
+      "path": "dataset_target_crossing/voxels_prediction.tfrecord",
+      "sha256": null,
+      "size_bytes": 20049530189,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-funny-target-crossing",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_stored_rows_not_equal_acquisition_time",
+        "format": "tfrecord_xy_gzip",
+        "max_retained_tracks_per_sample": 14943,
+        "mean_retained_tracks_per_sample": 14921.0,
+        "min_retained_tracks_per_sample": 14899,
+        "original_rows": "dataset_target_crossing/voxels_prediction_funny.original_indices.u32.gz",
+        "samples": 2,
+        "summary": "dataset_target_crossing/voxels_prediction_funny.summary.json",
+        "total_input_tracks": 88563,
+        "total_retained_tracks": 29842,
+        "transformation": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1"
+      },
+      "mtime_ns_at_registration": 1789187037520457228,
+      "parent_id": "legacy-funny",
+      "path": "dataset_target_crossing/voxels_prediction_funny.tfrecord",
+      "sha256": null,
+      "size_bytes": 1955988,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-test-target-crossing",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_stored_rows_not_equal_acquisition_time",
+        "format": "tfrecord_xy_gzip",
+        "max_retained_tracks_per_sample": 15319,
+        "mean_retained_tracks_per_sample": 14839.074626865671,
+        "min_retained_tracks_per_sample": 9818,
+        "original_rows": "dataset_target_crossing/voxels_prediction_test.original_indices.u32.gz",
+        "samples": 1608,
+        "summary": "dataset_target_crossing/voxels_prediction_test.summary.json",
+        "total_input_tracks": 71018775,
+        "total_retained_tracks": 23861232,
+        "transformation": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1"
+      },
+      "mtime_ns_at_registration": 1789187067358902792,
+      "parent_id": "legacy-test",
+      "path": "dataset_target_crossing/voxels_prediction_test.tfrecord",
+      "sha256": null,
+      "size_bytes": 1609223605,
+      "version": 1
+    },
+    {
+      "dataset_id": "legacy-validation-target-crossing",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_stored_rows_not_equal_acquisition_time",
+        "format": "tfrecord_xy_gzip",
+        "max_retained_tracks_per_sample": 15341,
+        "mean_retained_tracks_per_sample": 14864.94776119403,
+        "min_retained_tracks_per_sample": 13832,
+        "original_rows": "dataset_target_crossing/voxels_prediction_val.original_indices.u32.gz",
+        "samples": 1608,
+        "summary": "dataset_target_crossing/voxels_prediction_val.summary.json",
+        "total_input_tracks": 71128914,
+        "total_retained_tracks": 23902836,
+        "transformation": "canonical_poca_kink_or_straight_fallback_positive_cube_path_v1"
+      },
+      "mtime_ns_at_registration": 1789187105319660030,
+      "parent_id": "legacy-validation",
+      "path": "dataset_target_crossing/voxels_prediction_val.tfrecord",
+      "sha256": null,
+      "size_bytes": 1611841205,
+      "version": 1
+    },
+    {
+      "dataset_id": "sim-examples",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "simulated",
+      "metadata": {
+        "generation_manifest": "dataset/generated_custom/examples.tfrecord.json"
+      },
+      "mtime_ns_at_registration": 1789662725837322203,
+      "parent_id": null,
+      "path": "dataset/generated_custom/examples.tfrecord",
+      "sha256": null,
+      "size_bytes": 1395712,
+      "version": 1
+    },
+    {
+      "dataset_id": "sim-lead-block-25cm-raw",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "simulated",
+      "metadata": {
+        "generation_manifest": "dataset/generated_custom/lead_block_25cm_raw.tfrecord.json"
+      },
+      "mtime_ns_at_registration": 1789672782840801773,
+      "parent_id": null,
+      "path": "dataset/generated_custom/lead_block_25cm_raw.tfrecord",
+      "sha256": null,
+      "size_bytes": 2796151,
+      "version": 1
+    },
+    {
+      "dataset_id": "sim-lead-block-25cm-filtered-8192",
+      "identity_verification": "filesystem_metadata_only",
+      "kind": "derived",
+      "metadata": {
+        "dose_basis": "target_crossing_selected_rows",
+        "generation_manifest": "dataset/generated_custom/lead_block_25cm_filtered_8192.tfrecord.json"
+      },
+      "mtime_ns_at_registration": 1789672845985235128,
+      "parent_id": "sim-lead-block-25cm-raw",
+      "path": "dataset/generated_custom/lead_block_25cm_filtered_8192.tfrecord",
+      "sha256": null,
+      "size_bytes": 723404,
+      "version": 1
+    }
+  ],
+  "schema_version": 1
+}
