@@ -1,0 +1,9 @@
+version: 1
+name: lead_block_25cm
+background: air
+shapes:
+  - type: box
+    name: centred_solid_lead_block
+    material: lead
+    center_cm: [0, 0, 0]
+    size_cm: [25, 25, 25]

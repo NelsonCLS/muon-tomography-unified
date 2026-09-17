@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.h5 binary
+*.npy binary
+*.npz binary
+*.png binary
+*.pptx binary
+*.root binary
+*.tfrecord binary
+
+src/muon_tomo/_vendor/** linguist-vendored

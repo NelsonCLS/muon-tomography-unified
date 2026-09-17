@@ -1,0 +1,10 @@
+# Explicit simulation source, not a measured cosmic-muon spectrum.
+# Energies below are kinetic energies. Detector planes have fixed 2 m x 2 m acceptance.
+angular_mode: cosine
+max_zenith_deg: 45
+source_half_width_cm: 100
+energy_mode: power_law
+energy_min_gev: 1
+energy_max_gev: 200
+energy_power: -2.7
+mono_energy_gev: 3

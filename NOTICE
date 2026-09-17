@@ -1,0 +1,64 @@
+Muon Tomography Unified
+
+Except for the third-party components identified below, this repository
+contains original integration, packaging, calibration, validation, and
+visualization code made available under Apache License 2.0.
+
+MuNet
+-----
+
+The architecture code and frozen weights under
+`src/muon_tomo/_vendor/munet/` are adapted from Muon-Tomography-AI, Copyright
+2023 Lim Li Xin Jed and Qiu Ziming, licensed under Apache License 2.0:
+
+https://github.com/jedlimlx/Muon-Tomography-AI
+
+The copied upstream licence is retained in
+`third_party/Muon-Tomography-AI-LICENSE`, and weight checksums are recorded in
+`third_party/MUNET_WEIGHTS.sha256`.
+
+Packaging changes use relative imports. The `Agg2D` constructor guard was also
+corrected to compare the scattered feature count with the final MLP width; the
+upstream tuple-form assertion was always true. This validation-only correction
+does not alter inference for the packaged model configurations.
+
+muonTruck
+---------
+
+The ROOT input adapter and the PoCA and likelihood/MLEM implementations are
+derived from the local muonTruck research code at source revision
+8393853a47e8654552a62d1886fb6766d637782f, with local uncommitted changes
+present at import time. The upstream repository supplied by the project owner
+is:
+
+https://github.com/kfung010/muonTruck
+
+The linked TFRecord generator is:
+
+https://github.com/kfung010/muonTruck/blob/main/recon/generate_tfrecord.py
+
+No licence file was found in the source used for the adaptation. The top-level
+Apache licence does not grant rights to muonTruck-derived material.
+Redistribution outside the owner's environment requires confirmation of the
+applicable licence. The affected unified paths are:
+
+- `src/muon_tomo/io/root.py`
+- `src/muon_tomo/reconstruction/poca.py`
+- `src/muon_tomo/reconstruction/likelihood.py`
+
+All adapted components were changed to integrate the methods behind a shared
+data model, fixed 64^3 geometry, explicit units, and one output schema.
+
+Muons-Data-Generation
+---------------------
+
+The optional native backend in src/muon_tomo/simulation/geant4/main.cc is adapted
+from the local Muon-Tomography-AI/Muons-Data-Generation-master implementation,
+Copyright 2023 Lim Li Xin Jed and Qiu Ziming, under Apache License 2.0.
+Its license is retained in third_party/Muons-Data-Generation-LICENSE.
+Changes include canonical half-cell voxel placement, strict input checks,
+portable headless operation, deterministic seeds, explicit CSV schema, exact
+outgoing-plane recording, primary-only selection, and checked process status.
+The old straight-ray rejection and hard-coded source paths are not retained.
+Python scene construction, orchestration, validation and dataset manifests are
+new unified-package integration code. This backend is independent of muonTruck.

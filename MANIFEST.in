@@ -1,0 +1,9 @@
+include CITATION.cff
+include CONTRIBUTING.md
+include VALIDATION.md
+recursive-include configs *.json *.md *.yaml
+recursive-include LICENSES *
+recursive-include third_party *.sha256 *LICENSE
+
+recursive-include docs *.md
+recursive-include src/muon_tomo/simulation/geant4 *.cc CMakeLists.txt

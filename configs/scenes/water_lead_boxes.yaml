@@ -1,0 +1,14 @@
+version: 1
+name: water_lead_boxes
+background: air
+shapes:
+  - type: box
+    name: water
+    material: water
+    center_cm: [-15.625, 0, 0]
+    size_cm: [25, 25, 25]
+  - type: box
+    name: lead
+    material: lead
+    center_cm: [15.625, 0, 0]
+    size_cm: [25, 25, 25]

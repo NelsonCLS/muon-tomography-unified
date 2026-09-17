@@ -1,0 +1,22 @@
+version: 1
+name: mixed_shapes
+background: air
+shapes:
+  - type: hollow_box
+    name: water_shell
+    material: water
+    center_cm: [0, 0, 0]
+    size_cm: [70, 70, 50]
+    wall_cm: 4
+  - type: sphere
+    name: lead_sphere
+    material: lead
+    center_cm: [15, 0, 0]
+    radius_cm: 8
+  - type: cylinder
+    name: tilted_silver_cylinder
+    material: silver
+    center_cm: [-15, 0, 0]
+    radius_cm: 7
+    height_cm: 24
+    rotation_deg: [0, 30, 0]

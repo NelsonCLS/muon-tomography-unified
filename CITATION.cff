@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite this repository and acknowledge both
+  upstream method sources listed under references.
+title: Muon Tomography Unified
+type: software
+authors:
+  - family-names: Chan
+    given-names: Nelson
+version: 0.1.0
+references:
+  - type: article
+    title: "μ-Net: ConvNext-Based U-Nets for Cosmic Muon Tomography"
+    authors:
+      - family-names: Lim
+        given-names: Li Xin Jed
+      - family-names: Qiu
+        given-names: Ziming
+    year: 2023
+    url: https://arxiv.org/abs/2312.17265
+  - type: software
+    title: muonTruck
+    authors:
+      - family-names: Fung
+        given-names: K.
+    repository-code: https://github.com/kfung010/muonTruck

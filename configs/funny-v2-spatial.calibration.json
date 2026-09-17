@@ -1,0 +1,201 @@
+{
+  "models": [
+    {
+      "method": "munet",
+      "slope": 0.45726587795132256,
+      "intercept": -0.018742681706430352,
+      "calibration_id": "funny-v2-spatial",
+      "target": "inverse_radiation_length_cm_inv"
+    },
+    {
+      "method": "poca",
+      "slope": 0.07628636722697604,
+      "intercept": -0.032435811872777214,
+      "calibration_id": "funny-v2-spatial",
+      "target": "inverse_radiation_length_cm_inv"
+    },
+    {
+      "method": "likelihood",
+      "slope": 1.0,
+      "intercept": 0.0,
+      "calibration_id": "funny-v2-spatial",
+      "target": "inverse_radiation_length_cm_inv"
+    }
+  ],
+  "report": {
+    "dataset": "voxels_prediction_funny.tfrecord",
+    "fit_records": [
+      0
+    ],
+    "validate_records": [
+      1
+    ],
+    "methods": {
+      "munet": {
+        "slope": 0.45726587795132256,
+        "intercept": -0.018742681706430352,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 226384,
+            "truth_cm_inv": 0.0,
+            "raw_median": 0.041153982281684875,
+            "raw_mean": 0.2525900602340698
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 17604,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 2.891282558441162,
+            "raw_mean": 2.7696475982666016
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 888,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 2.8803324699401855,
+            "raw_mean": 2.7622568607330322
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 1032,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 2.8683767318725586,
+            "raw_mean": 2.791013717651367
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "munet",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.10342488319403213,
+            "valid_voxels": 262144,
+            "coverage_fraction": 1.0,
+            "mae_cm_inv": 0.12963369608373654,
+            "rmse_cm_inv": 0.32159739301498097,
+            "bias_cm_inv": -0.010442183176827768,
+            "prediction_min_cm_inv": 0.0,
+            "prediction_max_cm_inv": 1.3388339281082153,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      },
+      "poca": {
+        "slope": 0.07628636722697604,
+        "intercept": -0.032435811872777214,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 628,
+            "truth_cm_inv": 0.0,
+            "raw_median": 0.008890461176633835,
+            "raw_mean": 2.5152246952056885
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 549,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 16.832786560058594,
+            "raw_mean": 25.54206085205078
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 22,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 25.94183349609375,
+            "raw_mean": 35.023345947265625
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 31,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 29.897634506225586,
+            "raw_mean": 40.246150970458984
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "poca",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.3297453064389796,
+            "valid_voxels": 1447,
+            "coverage_fraction": 0.005519866943359375,
+            "mae_cm_inv": 0.8305749214449337,
+            "rmse_cm_inv": 2.807438662363685,
+            "bias_cm_inv": 0.4555307821355858,
+            "prediction_min_cm_inv": 0.0,
+            "prediction_max_cm_inv": 57.66629409790039,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      },
+      "likelihood": {
+        "slope": 1.0,
+        "intercept": 0.0,
+        "fit_regions": [
+          {
+            "label": 0,
+            "material": "air",
+            "voxels": 115931,
+            "truth_cm_inv": 0.0,
+            "raw_median": 0.004998563323169947,
+            "raw_mean": 0.17265085875988007
+          },
+          {
+            "label": 17,
+            "material": "silver",
+            "voxels": 9593,
+            "truth_cm_inv": 1.170568585395813,
+            "raw_median": 0.1774407923221588,
+            "raw_mean": 0.31835851073265076
+          },
+          {
+            "label": 19,
+            "material": "lead",
+            "voxels": 284,
+            "truth_cm_inv": 1.7817896604537964,
+            "raw_median": 0.14307597279548645,
+            "raw_mean": 0.35975906252861023
+          },
+          {
+            "label": 21,
+            "material": "uranium",
+            "voxels": 514,
+            "truth_cm_inv": 3.1583333015441895,
+            "raw_median": 0.31717368960380554,
+            "raw_mean": 0.5902743339538574
+          }
+        ],
+        "validation": [
+          {
+            "record": 1,
+            "method": "likelihood",
+            "full_grid_voxels": 262144,
+            "mse_full_grid_cm_inv_squared": 0.3093027881505535,
+            "valid_voxels": 133335,
+            "coverage_fraction": 0.5086326599121094,
+            "mae_cm_inv": 0.22624566595672746,
+            "rmse_cm_inv": 0.5769724257130703,
+            "bias_cm_inv": -0.017195500679346786,
+            "prediction_min_cm_inv": 0.0,
+            "prediction_max_cm_inv": 10.5479097366333,
+            "truth_min_cm_inv": 0.0,
+            "truth_max_cm_inv": 3.1583333015441895
+          }
+        ]
+      }
+    }
+  }
+}

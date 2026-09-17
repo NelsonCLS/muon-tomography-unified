@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+project(muon_tomo_simulation LANGUAGES CXX)
+find_package(Geant4 REQUIRED)
+include(${Geant4_USE_FILE})
+add_executable(muon_tomo_sim main.cc)
+target_compile_features(muon_tomo_sim PRIVATE cxx_std_17)
+target_link_libraries(muon_tomo_sim PRIVATE ${Geant4_LIBRARIES})
+install(TARGETS muon_tomo_sim RUNTIME DESTINATION bin)

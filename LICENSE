@@ -1,0 +1,17 @@
+Muon Tomography Unified has mixed licensing.
+
+Original integration, packaging, calibration, validation, and visualization
+code created for this repository is made available under the Apache License,
+Version 2.0. The complete text is in LICENSES/Apache-2.0.txt.
+
+The vendored MuNet implementation is Copyright 2023 Lim Li Xin Jed and Qiu
+Ziming and is redistributed under the Apache License, Version 2.0. Its copied
+licence is in third_party/Muon-Tomography-AI-LICENSE.
+
+The PoCA and likelihood/MLEM portions adapted from muonTruck do not currently
+have a confirmed upstream licence. The Apache licence above does not grant
+rights to those upstream-derived portions. Public redistribution of the
+complete repository requires permission from the muonTruck rights holder or a
+confirmed compatible licence.
+
+See NOTICE for component provenance and affected paths.

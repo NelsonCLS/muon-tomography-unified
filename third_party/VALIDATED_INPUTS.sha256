@@ -1,0 +1,3 @@
+# Read-only inputs used by the validation workflow
+65c160c4e38ac8477b1fff494ed55a7f883e732f3c5c21d36237c83fbd205e00  voxels_prediction_funny.tfrecord
+ae7fe70af88ed461a51b3723522ea50f39b4e76e1a61b61b5b181edcfbced9ac  cosmic_leadBox_200000.root
