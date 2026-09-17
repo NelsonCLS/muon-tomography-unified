@@ -1,4 +1,16 @@
+* text=auto eol=lf
+
+*.h5 binary
+*.npy binary
+*.npz binary
+*.png binary
+*.pptx binary
+*.root binary
+*.tfrecord binary
+
+src/muon_tomo/_vendor/** linguist-vendored
+
 # Historical references and provenance sidecars retain their original bytes.
-experiments/legacy_recipes/** -text whitespace=-blank-at-eof
+experiments/legacy_recipes/** -text whitespace=-blank-at-eof,cr-at-eol
 docs/archive/** -text
-dataset_target_crossing/** -text
+dataset_target_crossing/** -text whitespace=cr-at-eol
