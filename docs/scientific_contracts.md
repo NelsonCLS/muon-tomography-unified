@@ -7,9 +7,20 @@ Canonical prediction/truth arrays have shape 64³ and order `volume[x,y,z]` over
 are centimetres; angles radians; momentum parameter names use MeV/c convention.
 Density is inverse radiation length `1/X0` in cm⁻¹; its squared error has cm⁻² units.
 
-Legacy TFRecords use `x` with at least 12 columns: positions 0:3 and 6:9 in mm,
-first momentum/direction vector 3:6 and second direction 9:12. Optional column 12
-contains simulated momentum in historical data. `y` is a 64³ material-label array.
+Legacy TFRecords use `x` with at least 12 columns (zero-based indices):
+
+- `0:3`: lower/outgoing position in mm.
+- `3:6`: simulated outgoing momentum vector in MeV/c; its norm is outgoing momentum.
+- `6:9`: upper/incoming position in mm.
+- `9:12`: incoming unit direction, **not** a momentum vector.
+- Optional column `12`: initial/source kinetic energy T in MeV in the validated
+  13-column generator schema. Convert to source momentum using
+  `p = sqrt(T * (T + 2*m_mu))`, with `m_mu = 105.6583755 MeV/c²` and c=1 in this
+  energy-momentum expression. This is not measured upper-plane momentum.
+
+Older 12-column records do not contain initial energy; never invent it from a
+unit-direction norm. Verify generator provenance for other imported schemas.
+`y` is a 64³ material-label array.
 Legacy lower/upper endpoint ordering is not physical incoming/outgoing ordering.
 Use the shared physical-intersection helpers; do not infer flight order from a
 field named `entry` alone. Detector-only loaders normalize directions and exclude

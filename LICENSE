@@ -8,10 +8,11 @@ The vendored MuNet implementation is Copyright 2023 Lim Li Xin Jed and Qiu
 Ziming and is redistributed under the Apache License, Version 2.0. Its copied
 licence is in third_party/Muon-Tomography-AI-LICENSE.
 
-The PoCA and likelihood/MLEM portions adapted from muonTruck do not currently
-have a confirmed upstream licence. The Apache licence above does not grant
-rights to those upstream-derived portions. Public redistribution of the
-complete repository requires permission from the muonTruck rights holder or a
-confirmed compatible licence.
+The PoCA and likelihood/MLEM portions adapted from muonTruck are redistributed
+with permission, as confirmed by the repository maintainer on 2026-10-23.
+No upstream licence file was present in the imported source. This confirmation
+records permission for this repository's redistribution; it does not relicense
+those portions under Apache 2.0 or specify additional downstream rights.
+Contact the maintainer for the applicable permission terms.
 
 See NOTICE for component provenance and affected paths.

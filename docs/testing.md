@@ -37,7 +37,9 @@ select a new default source spectrum or train MuNet.
 CI retains portable tests on supported Python versions, lint/format, and package
 build validation. A separate TensorFlow job exercises synthetic TFRecord round trips;
 a wheel is installed and invoked outside the checkout to catch source-tree imports
-and missing package resources. CI configuration is not evidence that remote jobs
+and missing package resources. The portable suite also runs from the extracted
+source distribution, catching omitted shared fixtures and research runners. The
+dataset-free detector example is exercised on each portable platform. CI configuration is not evidence that remote jobs
 have run successfully; report actual local/remote results separately.
 
 ## Refactor versus scientific improvement

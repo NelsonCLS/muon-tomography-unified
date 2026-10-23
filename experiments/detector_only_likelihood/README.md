@@ -1,5 +1,8 @@
 # Detector-only likelihood experiment — not installed in production
 
+Historical results below require local result files, which are not included in a
+fresh checkout. These scores are experimental results, not production defaults.
+
 The useful variant is `exposure_pooled_likelihood.py`. It returns **inverse radiation length, 1/X0, in cm^-1** from exactly four arrays: incoming/outgoing positions in cm and incoming/outgoing directions. It is saved outside `src/`; the production likelihood source SHA-256 is verified unchanged in `results/integrity.json`.
 
 Open `report.html` for all nine results and figures. `results/final_comparison.json` contains raw metrics. `results/funny_0/pooled_viewer.html` displays all voxels strictly above 0.8 cm^-1, including interiors, without a count cap.
@@ -15,13 +18,15 @@ Earlier production results with the hidden-simulation-derived 1743.46 MeV/c prio
 The public function is:
 
 ```python
-from exposure_pooled_likelihood import reconstruct_inverse_radiation_length
+from muon_tomo.research.detector_only_likelihood.exposure_pooled_likelihood import (
+    reconstruct_inverse_radiation_length,
+)
 rho_cm_inv, metadata = reconstruct_inverse_radiation_length(
     entry_position_cm, entry_direction, exit_position_cm, exit_direction
 )
 ```
 
-Run from this directory or add this directory to the Python module search path. Dependencies come from the existing repository environment. Coordinates and measurement-array conventions are those of the existing geometry utilities. Unit directions are computed from the stored vectors; their norms are discarded. No material labels, truth volumes, simulated momenta, extra simulation columns, or object-specific metadata are passed to reconstruction.
+Install the repository with `pip install -e ".[all]"`; the helper is available through the installed package. Coordinates and measurement-array conventions are those of the existing geometry utilities. Unit directions are computed from the stored vectors; their norms are discarded. No material labels, truth volumes, simulated momenta, extra simulation columns, or object-specific metadata are passed to reconstruction.
 
 The user authorized one fixed external momentum spectrum to identify the absolute density scale. We use D. Reyna (2006), equations 2 and 3 with the published combined-fit coefficients:
 

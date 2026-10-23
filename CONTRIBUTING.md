@@ -26,5 +26,7 @@ Update the appropriate short documentation page and provenance manifest whenever
 behavior or storage changes; keep the root project summary a navigation index.
 Archive useful old reports without promoting them to current validation claims.
 
-Read `LICENSE` and `NOTICE` before redistribution: integration and vendored MuNet
-licensing do not automatically resolve the original muonTruck-derived code's rights.
+Read `LICENSE` and `NOTICE` before redistribution. The maintainer has confirmed
+permission to redistribute the muonTruck adaptations; this does not assign the
+Apache licence to that upstream code. Preserve component attribution and consult
+the maintainer about permission terms for further redistribution.

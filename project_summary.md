@@ -1,6 +1,6 @@
 # Project entry point
 
-Updated 2026-09-18. Read this page for navigation; actual source/configuration and
+Updated 2026-10-23. Read this page for navigation; actual source/configuration and
 saved run metadata remain authoritative. No absolute checkout path is required.
 The earlier detailed September 9 reference is preserved in
 [the archive](docs/archive/project_summary_2026-09-09.md), including old numerical
@@ -42,6 +42,7 @@ Production behavior is intentionally preserved during the structural refactor:
 | PoCA formula / grid / pooling | `src/muon_tomo/reconstruction/poca.py` |
 | Likelihood full/angular / side exits | `src/muon_tomo/reconstruction/likelihood.py`, `common.py` |
 | MuNet features / frozen weights | `src/muon_tomo/reconstruction/munet.py`, `_vendor/munet/` |
+| Momentum sensitivity / source-energy schema | `experiments/momentum_study/README.md`, `src/muon_tomo/research/momentum_study.py` |
 | External spectrum / candidate likelihood | `src/muon_tomo/research/`, [research index](docs/research.md) |
 | Cross sections / 3D meshes | `src/muon_tomo/visualization/` (old plotting imports remain compatible) |
 | Custom source/object simulation | [simulation guide](docs/custom_simulation.md), `src/muon_tomo/simulation/` |

@@ -62,3 +62,6 @@ dataset_target_crossing/**/*.npy
 # Large original-row maps / per-sample counts remain local data artifacts
 dataset_target_crossing/**/*.gz
 dataset_target_crossing/**/*.counts.csv
+
+# Locally downloaded reference papers (link to publishers in docs/references.md)
+docs/*.pdf

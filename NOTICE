@@ -39,12 +39,15 @@ https://github.com/kfung010/muonTruck/blob/main/recon/generate_tfrecord.py
 
 No licence file was found in the source used for the adaptation. The top-level
 Apache licence does not grant rights to muonTruck-derived material.
-Redistribution outside the owner's environment requires confirmation of the
-applicable licence. The affected unified paths are:
+On 2026-10-23 the repository maintainer confirmed that they have redistribution
+permission. This notice records that confirmation, not an independently verified
+licence grant or permission to relicense the upstream code. Contact the maintainer
+for applicable downstream terms. The affected unified paths include:
 
 - `src/muon_tomo/io/root.py`
 - `src/muon_tomo/reconstruction/poca.py`
 - `src/muon_tomo/reconstruction/likelihood.py`
+- `src/muon_tomo/reconstruction/paths.py` (shared adapted path geometry)
 
 All adapted components were changed to integrate the methods behind a shared
 data model, fixed 64^3 geometry, explicit units, and one output schema.

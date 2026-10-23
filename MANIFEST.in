@@ -11,7 +11,7 @@ recursive-include src/muon_tomo/simulation/geant4 *.cc CMakeLists.txt
 include AGENTS.md
 include project_summary.md
 recursive-include environments *.md *.txt *.json
-recursive-include benchmarks *.md *.json
+recursive-include benchmarks *.md *.json *.py
 
 # Include explicit research tests/runners, never generated study caches.
 include experiments/README.md
@@ -21,3 +21,9 @@ include experiments/detector_only_likelihood/*.md
 include experiments/likelihood_physics_study/*.py
 include experiments/likelihood_physics_study/*.md
 recursive-include experiments/legacy_recipes *.py *.md *.json
+
+recursive-include experiments/momentum_study *.py *.md
+recursive-include examples *.py *.md
+recursive-include data/catalog *.json
+
+recursive-include tests *.py

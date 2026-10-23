@@ -15,7 +15,7 @@ def _tensorflow():
     try:
         import tensorflow as tf
     except ImportError as exc:
-        raise RuntimeError("TFRecord support requires the 'munet' extra (TensorFlow)") from exc
+        raise RuntimeError("TFRecord support requires the 'tfrecord' extra (TensorFlow)") from exc
     return tf
 
 

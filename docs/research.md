@@ -59,3 +59,13 @@ outputs, and stop criteria. Reuse installed helpers and normal storage APIs.
 Write new results to a unique run, not into the source directory. Freeze candidate
 settings before holdout evaluation. Keep source, metrics, raw arrays, and figures
 linked by the same run identity; move only reusable solvers into `research/`.
+
+## Momentum sensitivity study
+
+The opt-in [momentum study](../experiments/momentum_study/README.md) compares
+frozen MuNet and PoCA across independent simulation priors and explicitly labelled
+truth-based oracles. Numerical helpers live in `muon_tomo.research.momentum_study`.
+The 2026-10-20 completed results are intended for `outputs/momentum-study/20261020-v3`;
+check its `manifest.json` completion field before using them. No production policy
+or trained weight is changed. Initial/source momentum is derived from stored
+kinetic energy, never the norm of the incoming unit-direction vector.

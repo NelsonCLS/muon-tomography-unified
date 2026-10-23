@@ -1,5 +1,9 @@
 # Physics-first likelihood study
 
+Historical reports, figures and `results/` below are local artifacts and are not
+included in a fresh checkout. The tracked [text report](REPORT.md) preserves the
+findings; these experimental scores do not describe current production defaults.
+
 Open **[report.html](report.html)** for the full physical explanation, all method scores, selectable reconstruction images and convergence checks. **[REPORT.md](REPORT.md)** contains the complete textual report. The scientific comparison plot is available as [PNG](results/validation_comparison.png) and [PDF](results/validation_comparison.pdf).
 
 ## Main result
@@ -18,10 +22,10 @@ This is an **experimental option**, not a production replacement. All production
 
 ## Use the candidate
 
-From this directory, or with it on the Python module search path:
+After installing the repository with `pip install -e ".[all]"`:
 
 ```python
-from core import reconstruct_local_pooled
+from muon_tomo.research.likelihood_physics_study.core import reconstruct_local_pooled
 
 rho_cm_inv, metadata = reconstruct_local_pooled(
     entry_position_cm,
@@ -53,7 +57,7 @@ export MPLBACKEND=Agg
 .venv/bin/python experiments/likelihood_physics_study/report.py
 ```
 
-Completed case fits are reused. For a fresh full recomputation, use a fresh checkout/copy without this experiment's generated `results` directory. Dependencies include NumPy, SciPy, TensorFlow for extraction/evaluation, Matplotlib and markdown-it-py for report generation.
+Completed case fits are reused only when their provenance matches. The commands above describe the historical default layout. For isolated `run.py` recomputation, pass `--results-dir /path/to/new-results` before the stage name; inspect the other report/convergence runners before combining them with a custom directory. Preserve old results. Dependencies include NumPy, SciPy, TensorFlow for extraction/evaluation, Matplotlib and markdown-it-py for report generation.
 
 Development cases reuse detector-only inputs and evaluation truth under `experiments/detector_only_likelihood/results`. The six additional objects are extracted from `dataset/voxels_prediction_val.tfrecord`. The predecessor's `method.py` and `spectrum_method.py` supply its verified track container, path moments and external spectrum. These dependencies are explicit; this experiment is not a standalone package detached from the unified repository.
 
